@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{32C7D853-8600-43AD-A8E6-3C8195F52BAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBsync.Contracts", "src\DBsync.Contracts\DBsync.Contracts.csproj", "{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBsync.Service", "src\DBsync.Service\DBsync.Service.csproj", "{7D72C791-447B-45BA-90B2-63C70561388A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBsync.Cli", "src\DBsync.Cli\DBsync.Cli.csproj", "{07D11380-4A53-4875-BA47-520AB199227B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D72C791-447B-45BA-90B2-63C70561388A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D72C791-447B-45BA-90B2-63C70561388A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D72C791-447B-45BA-90B2-63C70561388A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D72C791-447B-45BA-90B2-63C70561388A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07D11380-4A53-4875-BA47-520AB199227B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07D11380-4A53-4875-BA47-520AB199227B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07D11380-4A53-4875-BA47-520AB199227B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07D11380-4A53-4875-BA47-520AB199227B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F8EF29D7-1B7C-4A28-ADE5-B05B628CD173} = {32C7D853-8600-43AD-A8E6-3C8195F52BAD}
+		{7D72C791-447B-45BA-90B2-63C70561388A} = {32C7D853-8600-43AD-A8E6-3C8195F52BAD}
+		{07D11380-4A53-4875-BA47-520AB199227B} = {32C7D853-8600-43AD-A8E6-3C8195F52BAD}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>DBsync.Service</AssemblyName>
+    <RootNamespace>DBsync.Service</RootNamespace>
+    <UserSecretsId>dbsync-service</UserSecretsId>
+    <Version>1.0.0</Version>
+    <Product>DBsync</Product>
+    <Description>DBsync folder-pair sync engine, hosted as a Windows Service.</Description>
+    <!-- The service must run as a single instance per machine; no side-by-side app hosts. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.25" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
+    <PackageReference Include="System.IO.Pipes.AccessControl" Version="5.0.0" />
+    <PackageReference Include="System.Management" Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DBsync.Contracts\DBsync.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

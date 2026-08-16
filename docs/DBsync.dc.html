@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  body { margin: 0; }
+  @keyframes tether-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(280%); } }
+  @keyframes tether-spin { to { transform: rotate(360deg); } }
+  @keyframes tether-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* Theme grounds. Dark is the system's native ground; light re-derives the
+     same roles from the ramps (no pure white), with ink-tinted elevation. */
+  [data-theme] {
+    --wall: radial-gradient(120% 90% at 78% 12%, #1e2036 0%, #161826 55%, #12131f 100%);
+    --track: var(--color-neutral-900);
+  }
+  [data-theme="light"], [data-theme="system"].is-light {
+    --color-bg: #e4e7f5;
+    --color-surface: #f3f5fe;
+    --color-text: #292b31;
+    --color-accent: #796cbf;
+    --color-accent-300: #5d5294;
+    --color-accent-200: #423a6a;
+    --color-neutral-400: #595d6c;
+    --color-divider: color-mix(in srgb, #292b31 18%, transparent);
+    --shadow-sm: 0 0 0 1px #cfd3e5;
+    --shadow-md: 0 0 0 1px #cfd3e5, 0 6px 18px rgba(41, 43, 49, 0.14);
+    --shadow-lg: 0 0 0 1px #b2b6ca, 0 16px 40px rgba(41, 43, 49, 0.18);
+    --wall: radial-gradient(120% 90% at 78% 12%, #f3f5fe 0%, #e4e7f5 55%, #d2d6e6 100%);
+    --track: #cfd3e5;
+  }
+  [data-theme="light"] .tag-neutral, [data-theme="system"].is-light .tag-neutral { background: #cfd3e5; color: #292b31; }
+  [data-theme="light"] .tag-accent, [data-theme="system"].is-light .tag-accent { background: #d2cefd; color: #2b2741; }
+</style>
+</helmet>
+
+<div data-theme="{{ theme }}" class="{{ themeClass }}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; font-family: var(--font-body); color: var(--color-text); background: var(--wall);">
+
+  <div style="position: absolute; inset: 0; background-image: linear-gradient(90deg, color-mix(in srgb, var(--color-text) 5%, transparent) 1px, transparent 1px); background-size: 96px 96px;"></div>
+
+  <div style="position: absolute; left: 40px; top: 36px; display: flex; flex-direction: column; gap: 26px; width: 92px; text-align: center; font-size: 11px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+      <i class="ph ph-monitor" style="font-size: 30px;"></i><span>This PC</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+      <i class="ph ph-hard-drives" style="font-size: 30px;"></i><span>Network</span>
+    </div>
+  </div>
+
+  <!-- Activity & history window -->
+  <sc-if value="{{ logOpen }}" hint-placeholder-val="{{ true }}">
+  <section data-screen-label="Activity log" style="position: absolute; left: 100px; top: 88px; width: 760px; z-index: 2; border-radius: var(--radius-lg); background: var(--color-bg); box-shadow: var(--shadow-lg); overflow: hidden; animation: tether-rise 160ms ease-out;">
+    <header style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-surface);">
+      <i class="ph ph-list-magnifying-glass" style="font-size: 16px; color: var(--color-accent);"></i>
+      <span style="font-family: var(--font-heading); font-weight: 500; font-size: 13px; margin-right: auto;">DBsync — Activity</span>
+      <button class="btn btn-icon" style="width: 30px; height: 30px;"><i class="ph ph-minus" style="font-size: 14px;"></i></button>
+      <button class="btn btn-icon" style="width: 30px; height: 30px;" onClick="{{ closeLog }}"><i class="ph ph-x" style="font-size: 14px;"></i></button>
+    </header>
+    <div style="padding: var(--space-6) var(--space-8) var(--space-8);">
+      <div style="display: flex; align-items: flex-end; gap: var(--space-6); margin-bottom: var(--space-6);">
+        <div>
+          <h4 style="margin: 0 0 4px;">Activity &amp; history</h4>
+          <p class="text-muted" style="margin: 0; font-size: 12px;">Last 24 hours across 4 folder pairs</p>
+        </div>
+        <div style="display: flex; gap: var(--space-2); margin-left: auto;">
+          <span class="tag tag-neutral">1,284 files sent</span>
+          <span class="tag tag-neutral">312 received</span>
+          <span class="tag tag-outline">2 conflicts</span>
+        </div>
+      </div>
+      <table class="table">
+        <thead><tr><th style="width: 74px;">Time</th><th style="width: 110px;">Event</th><th>File</th><th style="width: 150px;">Folder pair</th><th style="width: 96px;">Result</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ logRows }}" as="row" hint-placeholder-count="6">
+            <tr>
+              <td class="text-muted" style="font-variant-numeric: tabular-nums;">{{ row.time }}</td>
+              <td><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px;"><i class="ph {{ row.icon }}" style="font-size: 14px; color: {{ row.color }};"></i>{{ row.event }}</span></td>
+              <td style="font-family: ui-monospace, monospace; font-size: 12px;">{{ row.file }}</td>
+              <td class="text-muted" style="font-size: 12px;">{{ row.pair }}</td>
+              <td><span class="tag {{ row.tagClass }}">{{ row.result }}</span></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <div style="display: flex; gap: var(--space-2); margin-top: var(--space-6);">
+        <button class="btn btn-secondary"><i class="ph ph-export" style="font-size: 14px;"></i>Export log</button>
+        <button class="btn btn-ghost" onClick="{{ openConflict }}">Review conflicts</button>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- Add / edit folder pair wizard -->
+  <sc-if value="{{ wizardOpen }}" hint-placeholder-val="{{ true }}">
+  <section data-screen-label="Pair wizard" style="position: absolute; right: 424px; top: 132px; width: 520px; z-index: 3; border-radius: var(--radius-lg); background: var(--color-bg); box-shadow: var(--shadow-lg); overflow: hidden; animation: tether-rise 160ms ease-out;">
+    <header style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-surface);">
+      <i class="ph ph-arrows-left-right" style="font-size: 16px; color: var(--color-accent);"></i>
+      <span style="font-family: var(--font-heading); font-weight: 500; font-size: 13px; margin-right: auto;">{{ wizardTitle }}</span>
+      <button class="btn btn-icon" style="width: 30px; height: 30px;" onClick="{{ closeWizard }}"><i class="ph ph-x" style="font-size: 14px;"></i></button>
+    </header>
+
+    <div style="display: flex; gap: var(--space-2); padding: var(--space-4) var(--space-8) 0;">
+      <sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+          <div style="height: 2px; border-radius: 2px; background: {{ step.bar }};"></div>
+          <span style="font-size: 11px; letter-spacing: 0.04em; color: {{ step.color }};">{{ step.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="padding: var(--space-6) var(--space-8) var(--space-8);">
+      <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+        <h4 style="margin: 0;">Which local folder?</h4>
+        <div class="field">
+          <label>Local path</label>
+          <div style="display: flex; gap: var(--space-2);">
+            <input class="input" value="{{ localPath }}" onChange="{{ setLocal }}" placeholder="C:\Users\dana\Projects">
+            <button class="btn btn-secondary" style="flex: none;"><i class="ph ph-folder-open" style="font-size: 14px;"></i>Browse</button>
+          </div>
+        </div>
+        <div>
+          <span class="text-muted" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;">Recent</span>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);">
+            <sc-for list="{{ recents }}" as="r" hint-placeholder-count="3">
+              <button class="btn btn-secondary" style="font-family: ui-monospace, monospace; font-size: 12px;" onClick="{{ r.pick }}">{{ r.path }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <p class="text-muted" style="margin: 0; font-size: 12px;">Subfolders are included. DBsync watches this folder and syncs changes as they happen.</p>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+        <h4 style="margin: 0;">Where on the network?</h4>
+        <div class="seg">
+          <label class="seg-opt"><input type="radio" name="dest" checked="{{ isUnc }}" onChange="{{ pickUnc }}"><i class="ph ph-network" style="font-size: 14px;"></i>UNC path</label>
+          <label class="seg-opt"><input type="radio" name="dest" checked="{{ isDrive }}" onChange="{{ pickDrive }}"><i class="ph ph-hard-drive" style="font-size: 14px;"></i>Mapped drive</label>
+        </div>
+        <div class="field">
+          <label>{{ destLabel }}</label>
+          <input class="input" style="font-family: ui-monospace, monospace;" value="{{ sharePath }}" onChange="{{ setShare }}">
+        </div>
+        <sc-if value="{{ isUnc }}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-surface);">
+          <div class="field"><label>Username</label><input class="input" value="CORP\dana" onChange="{{ noop }}"></div>
+          <div class="field"><label>Password</label><input class="input" type="password" value="opensesame" onChange="{{ noop }}"></div>
+          <label class="radio" style="grid-column: 1 / -1;"><input type="checkbox" checked="{{ saveCreds }}" onChange="{{ toggleCreds }}"><span class="dot"></span>Store credentials in Windows Credential Manager</label>
+        </div>
+        </sc-if>
+        <div style="display: flex; align-items: center; gap: var(--space-2); font-size: 12px; color: var(--color-accent-300);">
+          <i class="ph ph-check-circle" style="font-size: 14px;"></i>Reachable — 2.1 TB free, write access confirmed
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+        <h4 style="margin: 0;">How should it sync?</h4>
+        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+          <sc-for list="{{ directions }}" as="d" hint-placeholder-count="3">
+            <label class="radio" style="align-items: flex-start; gap: 10px;">
+              <input type="radio" name="dir" checked="{{ d.checked }}" onChange="{{ d.pick }}"><span class="dot" style="margin-top: 3px;"></span>
+              <span style="display: flex; flex-direction: column; gap: 2px;">
+                <span>{{ d.label }}</span>
+                <span class="text-muted" style="font-size: 12px;">{{ d.hint }}</span>
+              </span>
+            </label>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface);">
+          <span style="display: flex; flex-direction: column;">
+            <span style="font-size: 14px;">Realtime watcher</span>
+            <span class="text-muted" style="font-size: 12px;">Sync the moment a file changes</span>
+          </span>
+          <button onClick="{{ toggleWatcher }}" style="width: 40px; height: 22px; flex: none; padding: 2px; cursor: pointer; border-radius: 999px; border: 1px solid {{ watcherBorder }}; background: {{ watcherBg }}; display: flex; justify-content: {{ watcherAlign }};">
+            <span style="width: 16px; height: 16px; border-radius: 50%; background: {{ watcherKnob }};"></span>
+          </button>
+        </div>
+        <button class="btn btn-ghost" style="align-self: flex-start;" onClick="{{ toggleAdvanced }}"><i class="ph {{ advChevron }}" style="font-size: 14px;"></i>Advanced options</button>
+        <sc-if value="{{ advancedOpen }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-surface);">
+          <div class="field"><label>Exclude patterns</label><input class="input" style="font-family: ui-monospace, monospace;" value="*.tmp, ~$*, node_modules/" onChange="{{ noop }}"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+            <div class="field"><label>Upload limit</label><input class="input" value="8 MB/s" onChange="{{ noop }}"></div>
+            <div class="field"><label>Keep file versions</label><input class="input" value="5" onChange="{{ noop }}"></div>
+          </div>
+          <label class="radio"><input type="checkbox" checked="{{ vss }}" onChange="{{ toggleVss }}"><span class="dot"></span>Copy locked files via volume shadow copy</label>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <div style="display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-8);">
+        <span class="text-muted" style="font-size: 12px; margin-right: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, monospace;">{{ summary }}</span>
+        <button class="btn btn-secondary" style="flex: none; white-space: nowrap;" onClick="{{ back }}">{{ backLabel }}</button>
+        <button class="btn btn-primary" style="flex: none; white-space: nowrap;" onClick="{{ next }}">{{ nextLabel }}</button>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- Bottom-right stack: toast above the tray flyout -->
+  <div style="position: absolute; right: 16px; bottom: 62px; z-index: 4; display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-3);">
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="Toast" style="width: 348px; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-lg); animation: tether-rise 160ms ease-out;">
+    <span style="display: flex; align-items: center; gap: var(--space-2); font-size: 11px; color: color-mix(in srgb, var(--color-text) 55%, transparent);">
+      <i class="ph-fill ph-shuffle-simple" style="font-size: 13px; color: var(--color-accent);"></i>DBsync
+      <button class="btn btn-icon" style="width: 22px; height: 22px; margin-left: auto;" onClick="{{ dismissToast }}"><i class="ph ph-x" style="font-size: 12px;"></i></button>
+    </span>
+    <div style="margin-top: var(--space-2); font-family: var(--font-heading); font-weight: 500; font-size: 14px;">{{ toastTitle }}</div>
+    <div class="text-muted" style="font-size: 12px; margin-top: 2px;">{{ toastBody }}</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ flyoutOpen }}" hint-placeholder-val="{{ true }}">
+  <section data-screen-label="Tray flyout" style="width: 384px; border-radius: var(--radius-lg); background: var(--color-bg); box-shadow: var(--shadow-lg); overflow: hidden; animation: tether-rise 140ms ease-out;">
+    <header style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-4) var(--space-3);">
+      <i class="ph-fill ph-shuffle-simple" style="font-size: 18px; color: var(--color-accent);"></i>
+      <span style="display: flex; flex-direction: column; margin-right: auto;">
+        <span style="font-family: var(--font-heading); font-weight: 500; font-size: 15px;">DBsync</span>
+        <span style="font-size: 12px; color: {{ statusColor }};">{{ overallStatus }}</span>
+      </span>
+      <button class="btn btn-icon" style="width: 30px; height: 30px;" onClick="{{ openLog }}" title="Activity"><i class="ph ph-clock-counter-clockwise" style="font-size: 15px;"></i></button>
+      <button class="btn btn-icon" style="width: 30px; height: 30px;" title="Settings"><i class="ph ph-gear-six" style="font-size: 15px;"></i></button>
+    </header>
+
+    <div style="display: flex; flex-direction: column;">
+      <sc-for list="{{ pairs }}" as="pair" hint-placeholder-count="3">
+        <button onClick="{{ pair.open }}" style="display: flex; flex-direction: column; gap: 6px; padding: {{ rowPad }}; text-align: left; cursor: pointer; background: transparent; border: 0; border-left: 2px solid {{ pair.edge }}; color: inherit; font: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 5%, transparent);">
+          <span style="display: flex; align-items: center; gap: var(--space-2);">
+            <i class="ph {{ pair.icon }}" style="font-size: 15px; color: {{ pair.color }};"></i>
+            <span style="font-size: 14px; margin-right: auto;">{{ pair.name }}</span>
+            <span class="tag {{ pair.tagClass }}">{{ pair.status }}</span>
+          </span>
+          <span style="display: flex; align-items: center; gap: 6px; font-family: ui-monospace, monospace; font-size: 11px; color: color-mix(in srgb, var(--color-text) 55%, transparent);">
+            <span style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ pair.local }}</span>
+            <i class="ph ph-arrows-left-right" style="font-size: 12px;"></i>
+            <span style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ pair.share }}</span>
+          </span>
+          <span style="font-size: 11px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ pair.detail }}</span>
+          <sc-if value="{{ pair.busy }}" hint-placeholder-val="{{ true }}">
+            <span style="position: relative; display: block; width: 100%; height: 3px; border-radius: 2px; overflow: hidden; background: var(--track);">
+              <span style="position: absolute; inset: 0 auto 0 0; width: {{ pair.pct }}%; background: var(--color-accent);"></span>
+              <span style="position: absolute; top: 0; bottom: 0; width: 30%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-accent-200) 70%, transparent), transparent); animation: tether-sweep 1.6s linear infinite;"></span>
+            </span>
+          </sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4) 0;">
+      <span style="display: flex; flex-direction: column; margin-right: auto;">
+        <span style="font-size: 13px;">Appearance</span>
+        <span class="text-muted" style="font-size: 11px;">{{ themeHint }}</span>
+      </span>
+      <div class="seg">
+        <sc-for list="{{ themeOptions }}" as="t" hint-placeholder-count="3">
+          <label class="seg-opt" style="padding: 6px 9px;" title="{{ t.label }}">
+            <input type="radio" name="appearance" checked="{{ t.checked }}" onChange="{{ t.pick }}">
+            <i class="ph {{ t.icon }}" style="font-size: 14px;"></i>
+          </label>
+        </sc-for>
+      </div>
+    </div>
+
+    <footer style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4);">
+      <button class="btn btn-primary" onClick="{{ openWizard }}"><i class="ph ph-plus" style="font-size: 14px;"></i>Add folder pair</button>
+      <button class="btn btn-secondary" onClick="{{ togglePause }}"><i class="ph {{ pauseIcon }}" style="font-size: 14px;"></i>{{ pauseLabel }}</button>
+      <button class="btn btn-ghost" style="margin-left: auto;" onClick="{{ openLog }}">Activity</button>
+    </footer>
+  </section>
+  </sc-if>
+  </div>
+
+  <!-- Conflict dialog -->
+  <sc-if value="{{ conflictOpen }}" hint-placeholder-val="{{ true }}">
+  <div class="dialog-backdrop" data-screen-label="Conflict dialog" style="position: absolute; inset: 0; z-index: 5; animation: tether-rise 120ms ease-out;">
+    <div class="dialog" style="width: min(520px, 100%);">
+      <span style="display: flex; align-items: center; gap: var(--space-2);">
+        <i class="ph-fill ph-warning-diamond" style="font-size: 17px; color: var(--color-accent);"></i>
+        <span class="dialog-title">Both copies changed</span>
+      </span>
+      <p class="dialog-body" style="margin: 0;">Q3-forecast.xlsx was edited on this PC and on <span style="font-family: ui-monospace, monospace;">\\NAS-01\finance</span> since the last sync. Choose which copy wins.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+        <button onClick="{{ pickLocalCopy }}" style="display: flex; flex-direction: column; gap: 4px; padding: var(--space-3); text-align: left; cursor: pointer; font: inherit; color: inherit; border-radius: var(--radius-md); background: var(--color-bg); border: 1px solid {{ localCopyBorder }};">
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent);">This PC</span>
+          <span style="font-size: 14px;">Today, 14:02</span>
+          <span class="text-muted" style="font-size: 12px;">248 KB · dana</span>
+        </button>
+        <button onClick="{{ pickShareCopy }}" style="display: flex; flex-direction: column; gap: 4px; padding: var(--space-3); text-align: left; cursor: pointer; font: inherit; color: inherit; border-radius: var(--radius-md); background: var(--color-bg); border: 1px solid {{ shareCopyBorder }};">
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent);">Network share</span>
+          <span style="font-size: 14px;">Today, 13:47</span>
+          <span class="text-muted" style="font-size: 12px;">251 KB · m.reyes</span>
+        </button>
+      </div>
+      <label class="radio"><input type="checkbox" checked="{{ applyAll }}" onChange="{{ toggleApplyAll }}"><span class="dot"></span>Do this for the other 1 conflict in this pair</label>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onClick="{{ keepBoth }}">Keep both</button>
+        <button class="btn btn-primary" onClick="{{ resolveConflict }}">{{ resolveLabel }}</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- Taskbar -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 46px; display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-4); background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: 0 -1px 0 var(--color-divider);">
+    <div style="display: flex; align-items: center; gap: var(--space-2);">
+      <i class="ph ph-squares-four" style="font-size: 18px; opacity: 0.75;"></i>
+      <i class="ph ph-magnifying-glass" style="font-size: 17px; opacity: 0.6;"></i>
+      <i class="ph ph-folder" style="font-size: 17px; opacity: 0.6;"></i>
+    </div>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: var(--space-3);">
+      <i class="ph ph-caret-up" style="font-size: 13px; opacity: 0.6;"></i>
+      <button onClick="{{ toggleFlyout }}" title="DBsync" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; cursor: pointer; border-radius: var(--radius-sm); border: 1px solid {{ trayBorder }}; background: {{ trayBg }}; color: var(--color-accent);">
+        <i class="ph-fill ph-shuffle-simple" style="font-size: 15px; animation: {{ trayAnim }};"></i>
+      </button>
+      <i class="ph ph-wifi-high" style="font-size: 15px; opacity: 0.7;"></i>
+      <i class="ph ph-speaker-high" style="font-size: 15px; opacity: 0.7;"></i>
+      <span style="font-size: 12px; line-height: 1.2; text-align: right; font-variant-numeric: tabular-nums;">14:06<br>16/08/2026</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;system&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;system&quot;,&quot;tsType&quot;:&quot;'system' | 'light' | 'dark'&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;'comfortable' | 'compact'&quot;,&quot;section&quot;:&quot;Tray flyout&quot;},&quot;expertMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Wizard&quot;},&quot;openOnLoad&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;flyout&quot;,&quot;wizard&quot;,&quot;activity&quot;,&quot;conflict&quot;],&quot;default&quot;:&quot;flyout&quot;,&quot;tsType&quot;:&quot;'flyout' | 'wizard' | 'activity' | 'conflict'&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const MUTED = 'color-mix(in srgb, var(--color-text) 55%, transparent)';
+
+class Component extends DCLogic {
+  state = {
+    flyoutOpen: true, wizardOpen: false, logOpen: false, conflictOpen: false,
+    paused: false, toast: null, step: 1, dest: 'unc', direction: 'two-way',
+    watcher: true, advancedOpen: false, saveCreds: true, vss: false,
+    applyAll: false, winner: 'local', theme: null, systemLight: false,
+    localPath: 'C:\\Users\\dana\\Projects',
+    sharePath: '\\\\NAS-01\\team\\projects',
+    pairs: [
+      { id: 1, name: 'Projects', local: 'C:\\Users\\dana\\Projects', share: '\\\\NAS-01\\team\\projects', status: 'Syncing', detail: 'Sending build-notes.md — 148 of 240 files', pct: 62, busy: true },
+      { id: 2, name: 'Invoices', local: 'D:\\Finance\\Invoices', share: 'Z:\\finance\\invoices', status: 'In sync', detail: 'Up to date · checked 2 minutes ago', pct: 100, busy: false },
+      { id: 3, name: 'Q3 Reports', local: 'C:\\Users\\dana\\Reports', share: '\\\\NAS-01\\finance', status: 'Conflict', detail: '2 files changed in both places', pct: 0, busy: false },
+      { id: 4, name: 'Photo drops', local: 'E:\\Shoots\\2026', share: '\\\\NAS-01\\media\\shoots', status: 'Waiting', detail: 'Share unreachable — retrying in 40s', pct: 0, busy: false }
+    ]
+  };
+
+  componentDidMount() {
+    const open = this.props.openOnLoad;
+    if (open === 'wizard') this.setState({ wizardOpen: true });
+    if (open === 'activity') this.setState({ logOpen: true });
+    if (open === 'conflict') this.setState({ conflictOpen: true });
+    this.mq = window.matchMedia('(prefers-color-scheme: light)');
+    this.onScheme = () => this.setState({ systemLight: this.mq.matches });
+    this.onScheme();
+    this.mq.addEventListener('change', this.onScheme);
+    this.tick = setInterval(() => this.setState(s => {
+      if (s.paused) return null;
+      return { pairs: s.pairs.map(p => p.busy ? { ...p, pct: p.pct >= 97 ? 40 : p.pct + 1 } : p) };
+    }), 700);
+  }
+  componentWillUnmount() {
+    clearInterval(this.tick);
+    if (this.mq) this.mq.removeEventListener('change', this.onScheme);
+  }
+
+  toast(title, body) {
+    this.setState({ toast: { title, body } });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.setState({ toast: null }), 6000);
+  }
+
+  statusOf(p) {
+    if (this.state.paused) return { tagClass: 'tag-neutral', color: MUTED, icon: 'ph-pause', edge: 'transparent', label: 'Paused' };
+    if (p.status === 'Conflict') return { tagClass: 'tag-outline', color: 'var(--color-accent)', icon: 'ph-warning-diamond', edge: 'var(--color-accent)', label: p.status };
+    if (p.status === 'Waiting') return { tagClass: 'tag-neutral', color: MUTED, icon: 'ph-cloud-slash', edge: 'transparent', label: p.status };
+    if (p.status === 'Syncing') return { tagClass: 'tag-accent', color: 'var(--color-accent-300)', icon: 'ph-arrows-clockwise', edge: 'var(--color-accent-700)', label: p.status };
+    return { tagClass: 'tag-neutral', color: 'var(--color-neutral-400)', icon: 'ph-check', edge: 'transparent', label: p.status };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const unc = s.dest === 'unc';
+    const dense = this.props.density === 'compact';
+    const paused = s.paused;
+
+    const pairs = s.pairs.map(p => {
+      const st = this.statusOf(p);
+      return {
+        ...p, status: st.label, tagClass: st.tagClass, color: st.color, icon: st.icon, edge: st.edge,
+        busy: p.busy && !paused,
+        detail: paused ? 'Paused — resume to continue' : p.detail,
+        open: () => p.status === 'Conflict' ? this.setState({ conflictOpen: true }) : this.setState({ logOpen: true })
+      };
+    });
+
+    const stepMeta = ['Local folder', 'Destination', 'Sync options'].map((label, i) => {
+      const on = i + 1 <= s.step;
+      return { label, bar: on ? 'var(--color-accent)' : 'var(--color-neutral-800)', color: on ? 'var(--color-accent-300)' : MUTED };
+    });
+
+    const directions = [
+      { key: 'two-way', label: 'Two-way sync', hint: 'Changes flow in both directions' },
+      { key: 'push', label: 'One-way push', hint: 'Local wins; the share mirrors this PC' },
+      { key: 'pull', label: 'One-way pull', hint: 'Share wins; this PC mirrors it' }
+    ].map(d => ({ ...d, checked: s.direction === d.key, pick: () => this.setState({ direction: d.key }) }));
+
+    const logRows = [
+      { time: '14:06', event: 'Sent', icon: 'ph-arrow-up', color: 'var(--color-accent-300)', file: 'build-notes.md', pair: 'Projects', result: 'OK', tagClass: 'tag-neutral' },
+      { time: '14:05', event: 'Conflict', icon: 'ph-warning-diamond', color: 'var(--color-accent)', file: 'Q3-forecast.xlsx', pair: 'Q3 Reports', result: 'Pending', tagClass: 'tag-outline' },
+      { time: '14:04', event: 'Received', icon: 'ph-arrow-down', color: 'var(--color-neutral-300)', file: 'kickoff-deck.pptx', pair: 'Projects', result: 'OK', tagClass: 'tag-neutral' },
+      { time: '13:58', event: 'Deleted', icon: 'ph-trash', color: MUTED, file: 'old-scope.docx', pair: 'Projects', result: 'OK', tagClass: 'tag-neutral' },
+      { time: '13:52', event: 'Retry', icon: 'ph-cloud-slash', color: MUTED, file: 'DSC_4417.raf', pair: 'Photo drops', result: 'Offline', tagClass: 'tag-neutral' },
+      { time: '13:40', event: 'Sent', icon: 'ph-arrow-up', color: 'var(--color-accent-300)', file: 'INV-2026-118.pdf', pair: 'Invoices', result: 'OK', tagClass: 'tag-neutral' },
+      { time: '13:31', event: 'Locked', icon: 'ph-lock-simple', color: MUTED, file: 'ledger.accdb', pair: 'Invoices', result: 'Skipped', tagClass: 'tag-neutral' }
+    ];
+
+    const advOpen = s.advancedOpen || this.props.expertMode === true;
+    const conflicts = s.pairs.some(p => p.status === 'Conflict');
+
+    const theme = s.theme || this.props.theme || 'system';
+    const themeOptions = [
+      { key: 'light', label: 'Light', icon: 'ph-sun' },
+      { key: 'dark', label: 'Dark', icon: 'ph-moon' },
+      { key: 'system', label: 'Match Windows', icon: 'ph-desktop-tower' }
+    ].map(t => ({ ...t, checked: theme === t.key, pick: () => this.setState({ theme: t.key }) }));
+
+    return {
+      theme,
+      themeClass: theme === 'system' && s.systemLight ? 'is-light' : '',
+      themeOptions,
+      themeHint: theme === 'system' ? (s.systemLight ? 'Matching Windows — light' : 'Matching Windows — dark') : theme === 'light' ? 'Always light' : 'Always dark',
+      flyoutOpen: s.flyoutOpen, wizardOpen: s.wizardOpen, logOpen: s.logOpen,
+      conflictOpen: s.conflictOpen, pairs, logRows, steps: stepMeta, directions,
+      rowPad: dense ? '8px 14px' : '11px 16px',
+      overallStatus: paused ? 'All syncing paused' : conflicts ? '2 files need your attention' : 'Everything in sync',
+      statusColor: paused ? MUTED : conflicts ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+      pauseLabel: paused ? 'Resume all' : 'Pause all',
+      pauseIcon: paused ? 'ph-play' : 'ph-pause',
+      trayBorder: s.flyoutOpen ? 'var(--color-accent)' : 'transparent',
+      trayBg: s.flyoutOpen ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'transparent',
+      trayAnim: paused ? 'none' : 'tether-spin 3.2s linear infinite',
+      toast: !!s.toast,
+      toastTitle: s.toast ? s.toast.title : '',
+      toastBody: s.toast ? s.toast.body : '',
+      toastBottom: s.flyoutOpen ? '440px' : '62px',
+      dismissToast: () => this.setState({ toast: null }),
+
+      wizardTitle: 'Add folder pair',
+      isStep1: s.step === 1, isStep2: s.step === 2, isStep3: s.step === 3,
+      localPath: s.localPath, sharePath: s.sharePath,
+      isUnc: unc, isDrive: !unc,
+      destLabel: unc ? 'UNC path' : 'Mapped drive path',
+      setLocal: e => this.setState({ localPath: e.target.value }),
+      setShare: e => this.setState({ sharePath: e.target.value }),
+      pickUnc: () => this.setState({ dest: 'unc', sharePath: '\\\\NAS-01\\team\\projects' }),
+      pickDrive: () => this.setState({ dest: 'drive', sharePath: 'Z:\\team\\projects' }),
+      recents: ['C:\\Users\\dana\\Documents', 'D:\\Design', 'C:\\Work\\Contracts'].map(p => ({ path: p, pick: () => this.setState({ localPath: p }) })),
+      saveCreds: s.saveCreds, toggleCreds: () => this.setState(x => ({ saveCreds: !x.saveCreds })),
+      vss: s.vss, toggleVss: () => this.setState(x => ({ vss: !x.vss })),
+      advancedOpen: advOpen,
+      advChevron: advOpen ? 'ph-caret-down' : 'ph-caret-right',
+      toggleAdvanced: () => this.setState(x => ({ advancedOpen: !advOpen })),
+      watcherBg: s.watcher ? 'color-mix(in srgb, var(--color-accent) 30%, transparent)' : 'transparent',
+      watcherBorder: s.watcher ? 'var(--color-accent)' : 'var(--color-divider)',
+      watcherKnob: s.watcher ? 'var(--color-accent-200)' : 'var(--color-neutral-600)',
+      watcherAlign: s.watcher ? 'flex-end' : 'flex-start',
+      toggleWatcher: () => this.setState(x => ({ watcher: !x.watcher })),
+      summary: s.step === 3 ? s.localPath + '  ⇄  ' + s.sharePath : 'Step ' + s.step + ' of 3',
+      backLabel: s.step === 1 ? 'Cancel' : 'Back',
+      nextLabel: s.step === 3 ? 'Create pair' : 'Continue',
+      back: () => s.step === 1 ? this.setState({ wizardOpen: false }) : this.setState({ step: s.step - 1 }),
+      next: () => {
+        if (s.step < 3) return this.setState({ step: s.step + 1 });
+        this.setState(x => ({
+          wizardOpen: false, step: 1,
+          pairs: x.pairs.concat([{ id: Date.now(), name: x.localPath.split('\\').pop(), local: x.localPath, share: x.sharePath, status: 'Syncing', detail: 'First scan — comparing 1,204 files', pct: 8, busy: true }])
+        }));
+        this.toast('Folder pair created', s.localPath + ' is now syncing with ' + s.sharePath);
+      },
+      openWizard: () => this.setState({ wizardOpen: true, step: 1 }),
+      closeWizard: () => this.setState({ wizardOpen: false }),
+      openLog: () => this.setState({ logOpen: true }),
+      closeLog: () => this.setState({ logOpen: false }),
+      openConflict: () => this.setState({ conflictOpen: true }),
+      toggleFlyout: () => this.setState(x => ({ flyoutOpen: !x.flyoutOpen })),
+      togglePause: () => {
+        const now = !s.paused;
+        this.setState({ paused: now });
+        this.toast(now ? 'Syncing paused' : 'Syncing resumed', now ? 'DBsync will keep watching but send nothing until you resume.' : 'Catching up on 34 queued changes.');
+      },
+      applyAll: s.applyAll, toggleApplyAll: () => this.setState(x => ({ applyAll: !x.applyAll })),
+      pickLocalCopy: () => this.setState({ winner: 'local' }),
+      pickShareCopy: () => this.setState({ winner: 'share' }),
+      localCopyBorder: s.winner === 'local' ? 'var(--color-accent)' : 'var(--color-divider)',
+      shareCopyBorder: s.winner === 'share' ? 'var(--color-accent)' : 'var(--color-divider)',
+      resolveLabel: s.winner === 'local' ? 'Keep this PC' : 'Keep network copy',
+      resolveConflict: () => {
+        this.setState(x => ({ conflictOpen: false, pairs: x.pairs.map(p => p.status === 'Conflict' ? { ...p, status: 'Syncing', busy: true, pct: 30, detail: 'Applying your choice to 2 files' } : p) }));
+        this.toast('Conflict resolved', (s.winner === 'local' ? 'The copy on this PC' : 'The network copy') + ' of Q3-forecast.xlsx was kept.');
+      },
+      keepBoth: () => {
+        this.setState(x => ({ conflictOpen: false, pairs: x.pairs.map(p => p.status === 'Conflict' ? { ...p, status: 'In sync', detail: 'Up to date · both versions kept', busy: false } : p) }));
+        this.toast('Both copies kept', 'Saved as Q3-forecast (dana, DESKTOP-7L).xlsx alongside the original.');
+      },
+      noop: () => {}
+    };
+  }
+}
+
+</script>
+</body>
+</html>
