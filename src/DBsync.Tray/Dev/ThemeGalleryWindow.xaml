@@ -49,6 +49,20 @@
     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <StackPanel>
 
+        <!-- ── Icons ────────────────────────────────────────────────────── -->
+        <TextBlock Text="Icons" Style="{StaticResource H4TextStyle}" Margin="0,0,0,5.6" />
+        <TextBlock Style="{StaticResource SecondaryTextStyle}" Margin="0,0,0,11.2"
+                   Text="Named after the Phosphor glyph the design specifies, rendered from Segoe Fluent Icons. Check each shape against docs/DBsync.dc.html." />
+        <ItemsControl x:Name="IconSheet" Margin="0,0,0,22.4">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <Separator Style="{StaticResource FadingRuleStyle}" />
+
         <!-- ── Role tokens + audit ──────────────────────────────────────── -->
         <TextBlock Text="Role tokens" Style="{StaticResource H4TextStyle}" Margin="0,0,0,5.6" />
         <TextBlock x:Name="AuditSummary" Style="{StaticResource SecondaryTextStyle}" Margin="0,0,0,11.2" />

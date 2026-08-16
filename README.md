@@ -13,6 +13,7 @@ The tray UI is **not** in this repo yet — see [Not built yet](#not-built-yet).
 | `src/DBsync.Contracts` | `net6.0` | DTOs, the named-pipe wire protocol, and `DBsyncClient`. Referenced by the service, the CLI, and (later) the tray app. |
 | `src/DBsync.Service` | `net6.0-windows` | The service: sync engine, config store, SQLite history, pipe server. |
 | `src/DBsync.Cli` | `net6.0-windows` | `dbsync.exe` — drives the service from a terminal. Doubles as a worked example of the contract. |
+| `src/DBsync.Tray` | `net6.0-windows` (WPF) | The per-user tray app. Currently the theming foundation only — see [Tray app](#tray-app). |
 
 ## Build and install
 
@@ -141,14 +142,44 @@ attention", "Up to date · checked 2 minutes ago", "Sending build-notes.md — 1
 and `FolderPair.Detail` arrive ready to render, so every client shows the same words without
 re-deriving them.
 
+## Tray app
+
+The per-user half. So far this is the theming foundation only — no product surface exists yet.
+
+**What is there.** The Nocturne token set as WPF resource dictionaries, plus Light / Dark /
+Match Windows switching that follows the OS live:
+
+- `Themes/Ramps.xaml`, `Metrics.xaml`, `Typography.xaml` and `Controls.xaml` are
+  mode-independent. Only `Theme.Dark.xaml` / `Theme.Light.xaml` differ, and `ThemeManager` swaps
+  that one dictionary in place — every `DynamicResource` in the tree repaints, and no window has
+  to know a theme changed. **Reference tokens with `DynamicResource`, never `StaticResource`**;
+  a static reference resolves once at load and will not follow a swap.
+- `WindowsTheme` reads `AppsUseLightTheme` (the app preference, deliberately not
+  `SystemUsesLightTheme`) and re-themes on `SystemEvents.UserPreferenceChanged`, no restart.
+- Appearance persists per user in `%APPDATA%\DBsync\tray.json` — not in the service's
+  machine-level store, which is why there is no `appearance` field in the IPC contract.
+- `Text/Tracking.cs` implements letter-spacing, which WPF has no equivalent for, by rebuilding a
+  `TextBlock`'s inlines around zero-width spacers. Used on kickers, table headings and h4 only.
+- `Icons/` maps each icon the design names to a Segoe Fluent Icons codepoint via an `IconKey`
+  enum, so a font change is one edit.
+
+Two things translate rather than port. CSS `box-shadow` becomes a hairline border plus a
+`DropShadowEffect`, so a surface at a given elevation needs both halves. The fading rule is three
+strips rather than a gradient, because a gradient cannot express "48px from both ends" at an
+unknown width.
+
+**Checking it.** `DBsync.Tray.exe --audit` compares every resolved role brush against the table
+in [Theming](#theming--light-dark-and-match-windows) in both palettes and exits non-zero on a
+mismatch. Running the app with no arguments opens a gallery window — a development harness
+showing the tokens, type scale, icon sheet and control styles with a live mode switcher. Both
+disappear once the real surfaces land.
+
 ## Not built yet
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **The tray app.** All five surfaces (flyout, pair wizard, activity window, conflict dialog,
-  toasts), the Nocturne tokens, and light/dark/Match-Windows theming. Per the design, appearance
-  is a *per-user* preference and belongs in the tray app's own config, not in the service's
-  machine-level store — there is deliberately no `appearance` field in the contract.
+- **Every tray surface**: the flyout, pair wizard, activity window, conflict dialog and toasts.
+  The theming foundation above is in place; nothing that renders the product is.
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the
@@ -159,6 +190,13 @@ Deliberately out of scope for this pass — the design covers them and the contr
 
 ## Known constraints
 
+- **Inter and Phosphor are not bundled.** The design specifies Inter for type and Phosphor
+  shipped as vector assets; the app uses the system font stack (Segoe UI) and Segoe Fluent Icons
+  instead, so no third-party assets enter the repo. The type scale, weights and spacing are
+  correct but the letterforms are not, and the icon language differs — `warning-diamond` renders
+  as a triangle and `cloud-slash` as a wifi-off glyph, since neither has a counterpart. This is a
+  deliberate trade against the docs' high-fidelity brief. Dropping Inter's `.ttf` files into
+  `src/DBsync.Tray/Assets/Fonts` switches the type over with no code change.
 - The service runs as **LocalSystem**, which has no network identity. UNC shares that need
   authentication require credentials on the pair (`--user`/`--password`), or reconfiguring the
   service to run as a domain account with access.
