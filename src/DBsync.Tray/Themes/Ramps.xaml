@@ -1,0 +1,56 @@
+<!--
+  Nocturne tonal ramps, verbatim from docs/styles.css.
+
+  Ramps do NOT change between light and dark. Only the role tokens in Theme.Dark.xaml /
+  Theme.Light.xaml change, and they re-derive themselves from these same steps — which is why
+  nothing else in the app has to be duplicated per mode.
+
+  Reach for a role token first. Use a ramp step directly only where the design names one.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Neutral 100 -> 900 -->
+  <Color x:Key="Neutral100">#FFF3F5FE</Color>
+  <Color x:Key="Neutral200">#FFE4E7F5</Color>
+  <Color x:Key="Neutral300">#FFCFD3E5</Color>
+  <Color x:Key="Neutral400">#FFB2B6CA</Color>
+  <Color x:Key="Neutral500">#FF9397AB</Color>
+  <Color x:Key="Neutral600">#FF75798C</Color>
+  <Color x:Key="Neutral700">#FF595D6C</Color>
+  <Color x:Key="Neutral800">#FF3F424D</Color>
+  <Color x:Key="Neutral900">#FF292B31</Color>
+
+  <!-- Accent 100 -> 900 -->
+  <Color x:Key="Accent100">#FFF5F4FF</Color>
+  <Color x:Key="Accent200">#FFE7E5FE</Color>
+  <Color x:Key="Accent300">#FFD2CEFD</Color>
+  <Color x:Key="Accent400">#FFB5ABFC</Color>
+  <Color x:Key="Accent500">#FF968AE0</Color>
+  <Color x:Key="Accent600">#FF796CBF</Color>
+  <Color x:Key="Accent700">#FF5D5294</Color>
+  <Color x:Key="Accent800">#FF423A6A</Color>
+  <Color x:Key="Accent900">#FF2B2741</Color>
+
+  <SolidColorBrush x:Key="Neutral100Brush" Color="{StaticResource Neutral100}" />
+  <SolidColorBrush x:Key="Neutral300Brush" Color="{StaticResource Neutral300}" />
+  <SolidColorBrush x:Key="Neutral400Brush" Color="{StaticResource Neutral400}" />
+  <SolidColorBrush x:Key="Neutral600Brush" Color="{StaticResource Neutral600}" />
+  <SolidColorBrush x:Key="Neutral700Brush" Color="{StaticResource Neutral700}" />
+  <SolidColorBrush x:Key="Neutral800Brush" Color="{StaticResource Neutral800}" />
+  <SolidColorBrush x:Key="Neutral900Brush" Color="{StaticResource Neutral900}" />
+
+  <SolidColorBrush x:Key="Accent100Brush" Color="{StaticResource Accent100}" />
+  <SolidColorBrush x:Key="Accent200Brush" Color="{StaticResource Accent200}" />
+  <SolidColorBrush x:Key="Accent300Brush" Color="{StaticResource Accent300}" />
+  <SolidColorBrush x:Key="Accent600Brush" Color="{StaticResource Accent600}" />
+  <SolidColorBrush x:Key="Accent700Brush" Color="{StaticResource Accent700}" />
+  <SolidColorBrush x:Key="Accent800Brush" Color="{StaticResource Accent800}" />
+
+  <!--
+    The dialog backdrop is neutral-900 at 50% in both modes — the design specifies the literal
+    colour, not a role, so it does not flip with the theme.
+  -->
+  <SolidColorBrush x:Key="DialogBackdropBrush" Color="#80292B31" />
+
+</ResourceDictionary>

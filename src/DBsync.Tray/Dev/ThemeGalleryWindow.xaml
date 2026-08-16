@@ -1,0 +1,180 @@
+<Window x:Class="DBsync.Tray.Dev.ThemeGalleryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:text="clr-namespace:DBsync.Tray.Text"
+        Title="DBsync — theme gallery"
+        Width="980" Height="820"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True">
+
+  <!--
+    Development harness for the theming pass, not a product surface. It exists so the three
+    appearance modes, every role token and every control style can be checked side by side, and
+    so the token audit has somewhere to report. It goes away once the real surfaces land.
+  -->
+
+  <Grid Margin="22.4">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- ── Appearance switcher ─────────────────────────────────────────── -->
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+            CornerRadius="{DynamicResource RadiusMd}" Padding="16.8" Margin="0,0,0,16.8">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+          <TextBlock Text="Appearance" FontSize="{DynamicResource FontSizeChrome}" />
+          <TextBlock x:Name="SublineText" Style="{StaticResource MetaTextStyle}" Margin="0,2,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Button x:Name="LightButton" Content="Light" Style="{StaticResource SecondaryButtonStyle}"
+                  Margin="0,0,5.6,0" Click="OnLight" />
+          <Button x:Name="DarkButton" Content="Dark" Style="{StaticResource SecondaryButtonStyle}"
+                  Margin="0,0,5.6,0" Click="OnDark" />
+          <Button x:Name="SystemButton" Content="Match Windows" Style="{StaticResource SecondaryButtonStyle}"
+                  Click="OnSystem" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel>
+
+        <!-- ── Role tokens + audit ──────────────────────────────────────── -->
+        <TextBlock Text="Role tokens" Style="{StaticResource H4TextStyle}" Margin="0,0,0,5.6" />
+        <TextBlock x:Name="AuditSummary" Style="{StaticResource SecondaryTextStyle}" Margin="0,0,0,11.2" />
+        <ItemsControl x:Name="TokenList" Margin="0,0,0,22.4" />
+
+        <Separator Style="{StaticResource FadingRuleStyle}" />
+
+        <!-- ── Typography ───────────────────────────────────────────────── -->
+        <TextBlock Text="Type scale" Style="{StaticResource H4TextStyle}" Margin="0,0,0,11.2" />
+        <StackPanel Margin="0,0,0,22.4">
+          <TextBlock Text="Heading 4 — 20px / 1.12, −0.015em, weight 500"
+                     Style="{StaticResource H4TextStyle}" Margin="0,0,0,8.4" />
+          <TextBlock Text="Body 15px / 1.55, weight 400. Subfolders are included. DBsync watches this folder and syncs changes as they happen."
+                     Style="{StaticResource BodyTextStyle}" Margin="0,0,0,8.4" />
+          <TextBlock Text="UI label 14px — Realtime watcher"
+                     Style="{StaticResource LabelTextStyle}" Margin="0,0,0,5.6" />
+          <TextBlock Text="Secondary 12px — Sync the moment a file changes"
+                     Style="{StaticResource SecondaryTextStyle}" Margin="0,0,0,5.6" />
+          <TextBlock Text="Meta 11px — Up to date · checked 2 minutes ago"
+                     Style="{StaticResource MetaTextStyle}" Margin="0,0,0,5.6" />
+          <TextBlock Text="THIS PC" Style="{StaticResource KickerTextStyle}" Margin="0,0,0,5.6" />
+          <TextBlock Text="RECENT" Style="{StaticResource TableHeaderTextStyle}" Margin="0,0,0,5.6" />
+          <TextBlock Text="C:\Users\dana\Projects  ⇄  \\NAS-01\team\projects"
+                     Style="{StaticResource PathTextStyle}" />
+          <!-- Same string with tracking off, so the attached property's effect is visible. -->
+          <TextBlock Text="THIS PC (no tracking)" Style="{StaticResource KickerTextStyle}"
+                     text:Tracking.Amount="0" Margin="0,8.4,0,0" />
+        </StackPanel>
+
+        <Separator Style="{StaticResource FadingRuleStyle}" />
+
+        <!-- ── Buttons ──────────────────────────────────────────────────── -->
+        <TextBlock Text="Buttons — outlined, never filled" Style="{StaticResource H4TextStyle}"
+                   Margin="0,0,0,11.2" />
+        <WrapPanel Margin="0,0,0,22.4">
+          <Button Content="Add folder pair" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8.4,8.4" />
+          <Button Content="Pause all" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8.4,8.4" />
+          <Button Content="Activity" Style="{StaticResource GhostButtonStyle}" Margin="0,0,8.4,8.4" />
+          <Button Content="✕" Style="{StaticResource IconButtonStyle}" Margin="0,0,8.4,8.4" />
+          <Button Content="Disabled" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False"
+                  Margin="0,0,8.4,8.4" />
+        </WrapPanel>
+
+        <!-- ── Tags ─────────────────────────────────────────────────────── -->
+        <TextBlock Text="Tags" Style="{StaticResource H4TextStyle}" Margin="0,0,0,11.2" />
+        <WrapPanel Margin="0,0,0,22.4">
+          <ContentControl Content="Syncing" Style="{StaticResource TagAccentStyle}" Margin="0,0,8.4,8.4" />
+          <ContentControl Content="In sync" Style="{StaticResource TagNeutralStyle}" Margin="0,0,8.4,8.4" />
+          <ContentControl Content="Conflict" Style="{StaticResource TagOutlineStyle}" Margin="0,0,8.4,8.4" />
+          <ContentControl Content="Waiting" Style="{StaticResource TagNeutralStyle}" Margin="0,0,8.4,8.4" />
+          <ContentControl Content="Paused" Style="{StaticResource TagNeutralStyle}" Margin="0,0,8.4,8.4" />
+        </WrapPanel>
+
+        <!-- ── Inputs ───────────────────────────────────────────────────── -->
+        <TextBlock Text="Inputs" Style="{StaticResource H4TextStyle}" Margin="0,0,0,11.2" />
+        <StackPanel Margin="0,0,0,22.4" MaxWidth="460" HorizontalAlignment="Left">
+          <TextBlock Text="Local path" Style="{StaticResource FieldLabelTextStyle}" />
+          <TextBox Text="C:\Users\dana\Projects" Style="{StaticResource InputStyle}" Margin="0,0,0,11.2" />
+          <TextBlock Text="UNC path" Style="{StaticResource FieldLabelTextStyle}" />
+          <TextBox Text="\\NAS-01\team\projects" Style="{StaticResource MonoInputStyle}" Margin="0,0,0,11.2" />
+
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,11.2">
+            <TextBlock Text="Realtime watcher" Style="{StaticResource LabelTextStyle}"
+                       VerticalAlignment="Center" Margin="0,0,11.2,0" />
+            <ToggleButton IsChecked="True" Style="{StaticResource SwitchStyle}" Margin="0,0,11.2,0" />
+            <ToggleButton IsChecked="False" Style="{StaticResource SwitchStyle}" />
+          </StackPanel>
+
+          <RadioButton Content="Two-way sync" IsChecked="True" Style="{StaticResource RadioStyle}"
+                       Margin="0,0,0,8.4" />
+          <RadioButton Content="One-way push" Style="{StaticResource RadioStyle}" Margin="0,0,0,8.4" />
+          <RadioButton Content="One-way pull" Style="{StaticResource RadioStyle}" />
+        </StackPanel>
+
+        <!-- ── Elevation ────────────────────────────────────────────────── -->
+        <TextBlock Text="Elevation" Style="{StaticResource H4TextStyle}" Margin="0,0,0,11.2" />
+        <WrapPanel Margin="0,0,0,33.6">
+          <Border Style="{StaticResource ElevationSmStyle}" Background="{DynamicResource SurfaceBrush}"
+                  Width="200" Height="80" Margin="0,0,22.4,22.4">
+            <TextBlock Text="shadow-sm" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+          <Border Style="{StaticResource ElevationMdStyle}" Background="{DynamicResource SurfaceBrush}"
+                  Width="200" Height="80" Margin="0,0,22.4,22.4">
+            <TextBlock Text="shadow-md" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+          <Border Style="{StaticResource ElevationLgStyle}" Background="{DynamicResource SurfaceBrush}"
+                  Width="200" Height="80" Margin="0,0,22.4,22.4">
+            <TextBlock Text="shadow-lg" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+        </WrapPanel>
+
+        <!-- ── Progress ─────────────────────────────────────────────────── -->
+        <TextBlock Text="Progress track and sweep" Style="{StaticResource H4TextStyle}"
+                   Margin="0,0,0,11.2" />
+        <Grid Height="3" Width="352" HorizontalAlignment="Left" Margin="0,0,0,22.4">
+          <Border Background="{DynamicResource ProgressTrackBrush}"
+                  CornerRadius="{DynamicResource RadiusProgress}" />
+          <Border Background="{DynamicResource AccentBrush}" Width="218" HorizontalAlignment="Left"
+                  CornerRadius="{DynamicResource RadiusProgress}" />
+          <Border Background="{DynamicResource ProgressSweepBrush}" Width="106"
+                  HorizontalAlignment="Left" Margin="60,0,0,0" />
+        </Grid>
+
+        <!-- ── Status edges ─────────────────────────────────────────────── -->
+        <TextBlock Text="Pair-row status edges" Style="{StaticResource H4TextStyle}" Margin="0,0,0,11.2" />
+        <StackPanel Margin="0,0,0,22.4">
+          <Border BorderThickness="2,0,0,0" BorderBrush="{DynamicResource EdgeSyncingBrush}"
+                  Padding="16.8,11.2" Margin="0,0,0,2.8">
+            <TextBlock Text="Syncing edge — #5d5294 dark / accent light"
+                       Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+          <Border BorderThickness="2,0,0,0" BorderBrush="{DynamicResource EdgeConflictBrush}"
+                  Padding="16.8,11.2" Margin="0,0,0,2.8">
+            <TextBlock Text="Conflict edge — accent" Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+          <Border BorderThickness="2,0,0,0" BorderBrush="{DynamicResource EdgeQuietBrush}"
+                  Padding="16.8,11.2">
+            <TextBlock Text="In sync / Waiting / Paused — transparent edge"
+                       Style="{StaticResource SecondaryTextStyle}" />
+          </Border>
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</Window>

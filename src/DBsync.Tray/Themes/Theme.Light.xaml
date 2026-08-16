@@ -1,0 +1,99 @@
+<!--
+  Light role tokens.
+
+  Light is not an inversion — it re-derives the same roles from the ramps: no pure white, and
+  ink-tinted elevation instead of ambient darkness. Where dark reads a high ramp step for an
+  accent role, light reads the mirrored low step (300 -> 700, 200 -> 800, neutral-400 ->
+  neutral-700), so contrast direction is preserved.
+
+  Every key in Theme.Dark.xaml exists here with the same name. Keep them in step.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <sys:String x:Key="ThemeVariantName">Light</sys:String>
+
+  <!-- ── Grounds and text ─────────────────────────────────────────────── -->
+  <Color x:Key="BackgroundColor">#FFE4E7F5</Color>
+  <Color x:Key="SurfaceColor">#FFF3F5FE</Color>
+  <Color x:Key="TextColor">#FF292B31</Color>
+
+  <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+  <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+  <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+
+  <SolidColorBrush x:Key="TextMuted55Brush" Color="#8C292B31" />
+  <SolidColorBrush x:Key="TextMuted62Brush" Color="#9E292B31" />
+  <SolidColorBrush x:Key="TextMuted70Brush" Color="#B3292B31" />
+  <SolidColorBrush x:Key="TextMuted85Brush" Color="#D9292B31" />
+  <SolidColorBrush x:Key="TextMuted50Brush" Color="#80292B31" />
+  <SolidColorBrush x:Key="TextMuted60Brush" Color="#99292B31" />
+
+  <!-- ── Accent — accent-600 in light, so it holds up on a pale ground ── -->
+  <Color x:Key="AccentColor">#FF796CBF</Color>
+  <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+
+  <!-- The "300" role resolves to accent-700 in light. -->
+  <Color x:Key="AccentTextColor">#FF5D5294</Color>
+  <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource AccentTextColor}" />
+
+  <!-- The "200" role resolves to accent-800 in light. -->
+  <Color x:Key="AccentEmphasisColor">#FF423A6A</Color>
+  <SolidColorBrush x:Key="AccentEmphasisBrush" Color="{StaticResource AccentEmphasisColor}" />
+
+  <!-- The neutral-400 role resolves to neutral-700 in light. -->
+  <SolidColorBrush x:Key="CalmTextBrush" Color="#FF595D6C" />
+
+  <!-- ── Dividers and interaction tints ──────────────────────────────── -->
+  <!-- Light dividers sit at 18% rather than 16%; ink on a pale ground needs the extra weight. -->
+  <SolidColorBrush x:Key="DividerBrush" Color="#2E292B31" />
+
+  <SolidColorBrush x:Key="HoverTintBrush" Color="#12292B31" />
+  <SolidColorBrush x:Key="PressedTintBrush" Color="#24292B31" />
+  <SolidColorBrush x:Key="RowHoverTintBrush" Color="#0D292B31" />
+  <SolidColorBrush x:Key="TableRowHoverTintBrush" Color="#0A292B31" />
+  <SolidColorBrush x:Key="TableRuleBrush" Color="#14292B31" />
+  <SolidColorBrush x:Key="InputHoverBorderBrush" Color="#73292B31" />
+
+  <SolidColorBrush x:Key="AccentHoverTintBrush" Color="#1F796CBF" />
+  <SolidColorBrush x:Key="AccentPressedTintBrush" Color="#38796CBF" />
+  <SolidColorBrush x:Key="AccentGhostHoverTintBrush" Color="#1A796CBF" />
+  <SolidColorBrush x:Key="AccentGhostPressedTintBrush" Color="#2E796CBF" />
+  <SolidColorBrush x:Key="AccentSelectionBrush" Color="#4D796CBF" />
+
+  <SolidColorBrush x:Key="TrayIconActiveFillBrush" Color="#24796CBF" />
+  <SolidColorBrush x:Key="SwitchOnTrackBrush" Color="#4D796CBF" />
+
+  <!-- ── Progress ────────────────────────────────────────────────────── -->
+  <SolidColorBrush x:Key="ProgressTrackBrush" Color="#FFCFD3E5" />
+
+  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="#00423A6A" />
+    <GradientStop Offset="0.5" Color="#FF423A6A" />
+    <GradientStop Offset="1" Color="#00423A6A" />
+  </LinearGradientBrush>
+
+  <!-- ── Tags ────────────────────────────────────────────────────────── -->
+  <SolidColorBrush x:Key="TagNeutralBackgroundBrush" Color="#FFCFD3E5" />
+  <SolidColorBrush x:Key="TagNeutralForegroundBrush" Color="#FF292B31" />
+  <SolidColorBrush x:Key="TagAccentBackgroundBrush" Color="#FFD2CEFD" />
+  <SolidColorBrush x:Key="TagAccentForegroundBrush" Color="#FF2B2741" />
+
+  <!-- ── Pair-row left edge, by status ───────────────────────────────── -->
+  <!-- The edges track the accent role, so they stay legible against the pale ground. -->
+  <SolidColorBrush x:Key="EdgeSyncingBrush" Color="#FF796CBF" />
+  <SolidColorBrush x:Key="EdgeConflictBrush" Color="#FF5D5294" />
+  <SolidColorBrush x:Key="EdgeQuietBrush" Color="Transparent" />
+
+  <!-- ── Elevation — ink-tinted, not ambient darkness ────────────────── -->
+  <SolidColorBrush x:Key="EdgeSmBrush" Color="#FFCFD3E5" />
+  <SolidColorBrush x:Key="EdgeMdBrush" Color="#FFCFD3E5" />
+  <SolidColorBrush x:Key="EdgeLgBrush" Color="#FFB2B6CA" />
+
+  <DropShadowEffect x:Key="ShadowMdEffect" Color="#FF292B31" Opacity="0.14"
+                    BlurRadius="18" ShadowDepth="6" Direction="270" RenderingBias="Quality" />
+  <DropShadowEffect x:Key="ShadowLgEffect" Color="#FF292B31" Opacity="0.18"
+                    BlurRadius="40" ShadowDepth="16" Direction="270" RenderingBias="Quality" />
+
+</ResourceDictionary>

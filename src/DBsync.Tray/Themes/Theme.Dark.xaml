@@ -1,0 +1,109 @@
+<!--
+  Dark role tokens — the Nocturne native ground.
+
+  This is the ONLY dictionary that differs between modes (its sibling is Theme.Light.xaml).
+  Every key here also exists there, so swapping the two re-themes the whole app.
+
+  Reference every key from XAML with DynamicResource, never StaticResource; a StaticResource is
+  resolved once at load and will not follow a theme swap.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <sys:String x:Key="ThemeVariantName">Dark</sys:String>
+
+  <!-- ── Grounds and text ─────────────────────────────────────────────── -->
+  <Color x:Key="BackgroundColor">#FF161826</Color>
+  <Color x:Key="SurfaceColor">#FF232532</Color>
+  <Color x:Key="TextColor">#FFE9E9ED</Color>
+
+  <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+  <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+  <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+
+  <!--
+    Muted text is always the text colour at a percentage, so it follows the mode automatically.
+    The design uses three steps: 55% (secondary), 62% (row detail), 70% (field labels).
+  -->
+  <SolidColorBrush x:Key="TextMuted55Brush" Color="#8CE9E9ED" />
+  <SolidColorBrush x:Key="TextMuted62Brush" Color="#9EE9E9ED" />
+  <SolidColorBrush x:Key="TextMuted70Brush" Color="#B3E9E9ED" />
+  <SolidColorBrush x:Key="TextMuted85Brush" Color="#D9E9E9ED" />
+  <SolidColorBrush x:Key="TextMuted50Brush" Color="#80E9E9ED" />
+  <SolidColorBrush x:Key="TextMuted60Brush" Color="#99E9E9ED" />
+
+  <!-- ── Accent ──────────────────────────────────────────────────────── -->
+  <Color x:Key="AccentColor">#FF9184D9</Color>
+  <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+
+  <!-- The "300" step: accent-toned copy such as the wizard's validation line. -->
+  <Color x:Key="AccentTextColor">#FFD2CEFD</Color>
+  <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource AccentTextColor}" />
+
+  <!-- The "200" step: the toggle knob and the progress sweep highlight. -->
+  <Color x:Key="AccentEmphasisColor">#FFE7E5FE</Color>
+  <SolidColorBrush x:Key="AccentEmphasisBrush" Color="{StaticResource AccentEmphasisColor}" />
+
+  <!-- neutral-400: calm status text ("Everything in sync"). -->
+  <SolidColorBrush x:Key="CalmTextBrush" Color="#FFB2B6CA" />
+
+  <!-- ── Dividers and interaction tints ──────────────────────────────── -->
+  <SolidColorBrush x:Key="DividerBrush" Color="#29E9E9ED" />
+
+  <SolidColorBrush x:Key="HoverTintBrush" Color="#12E9E9ED" />
+  <SolidColorBrush x:Key="PressedTintBrush" Color="#24E9E9ED" />
+  <SolidColorBrush x:Key="RowHoverTintBrush" Color="#0DE9E9ED" />
+  <SolidColorBrush x:Key="TableRowHoverTintBrush" Color="#0AE9E9ED" />
+  <SolidColorBrush x:Key="TableRuleBrush" Color="#14E9E9ED" />
+  <SolidColorBrush x:Key="InputHoverBorderBrush" Color="#73E9E9ED" />
+
+  <SolidColorBrush x:Key="AccentHoverTintBrush" Color="#1F9184D9" />
+  <SolidColorBrush x:Key="AccentPressedTintBrush" Color="#389184D9" />
+  <SolidColorBrush x:Key="AccentGhostHoverTintBrush" Color="#1A9184D9" />
+  <SolidColorBrush x:Key="AccentGhostPressedTintBrush" Color="#2E9184D9" />
+  <SolidColorBrush x:Key="AccentSelectionBrush" Color="#4D9184D9" />
+
+  <!-- Tray icon while the flyout is open: 14% accent fill plus a 1px accent border. -->
+  <SolidColorBrush x:Key="TrayIconActiveFillBrush" Color="#249184D9" />
+
+  <!-- Realtime-watcher switch, ON: 30% accent track. -->
+  <SolidColorBrush x:Key="SwitchOnTrackBrush" Color="#4D9184D9" />
+
+  <!-- ── Progress ────────────────────────────────────────────────────── -->
+  <SolidColorBrush x:Key="ProgressTrackBrush" Color="#FF292B31" />
+
+  <!-- The sweep: transparent -> accent-200 -> transparent, 30% of the track width. -->
+  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="#00E7E5FE" />
+    <GradientStop Offset="0.5" Color="#FFE7E5FE" />
+    <GradientStop Offset="1" Color="#00E7E5FE" />
+  </LinearGradientBrush>
+
+  <!-- ── Tags ────────────────────────────────────────────────────────── -->
+  <SolidColorBrush x:Key="TagNeutralBackgroundBrush" Color="#FF3F424D" />
+  <SolidColorBrush x:Key="TagNeutralForegroundBrush" Color="#FFF3F5FE" />
+  <SolidColorBrush x:Key="TagAccentBackgroundBrush" Color="#FF423A6A" />
+  <SolidColorBrush x:Key="TagAccentForegroundBrush" Color="#FFF5F4FF" />
+
+  <!-- ── Pair-row left edge, by status ───────────────────────────────── -->
+  <SolidColorBrush x:Key="EdgeSyncingBrush" Color="#FF5D5294" />
+  <SolidColorBrush x:Key="EdgeConflictBrush" Color="#FF9184D9" />
+  <SolidColorBrush x:Key="EdgeQuietBrush" Color="Transparent" />
+
+  <!--
+    ── Elevation ───────────────────────────────────────────────────────
+    CSS box-shadow has no WPF equivalent, so each level splits in two: the "0 0 0 1px" spread is
+    a hairline border (an Edge*Brush), and the blurred part is a DropShadowEffect. A surface at
+    a given level needs both.
+  -->
+  <SolidColorBrush x:Key="EdgeSmBrush" Color="#FF3F424D" />
+  <SolidColorBrush x:Key="EdgeMdBrush" Color="#FF595D6C" />
+  <SolidColorBrush x:Key="EdgeLgBrush" Color="#FF9397AB" />
+
+  <DropShadowEffect x:Key="ShadowMdEffect" Color="#FF000000" Opacity="0.55"
+                    BlurRadius="18" ShadowDepth="6" Direction="270" RenderingBias="Quality" />
+  <DropShadowEffect x:Key="ShadowLgEffect" Color="#FF000000" Opacity="0.65"
+                    BlurRadius="40" ShadowDepth="16" Direction="270" RenderingBias="Quality" />
+
+</ResourceDictionary>

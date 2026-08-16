@@ -1,0 +1,58 @@
+<!--
+  Spacing, radii and the handful of composite values the design names directly.
+  Mode-independent: "Unchanged in both modes: type, spacing, radii, icon set, and the
+  outlined-button treatment." (docs/README.md, Theming)
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <!-- Spacing scale, 0.70x density -->
+  <sys:Double x:Key="Space1">2.8</sys:Double>
+  <sys:Double x:Key="Space2">5.6</sys:Double>
+  <sys:Double x:Key="Space3">8.4</sys:Double>
+  <sys:Double x:Key="Space4">11.2</sys:Double>
+  <sys:Double x:Key="Space6">16.8</sys:Double>
+  <sys:Double x:Key="Space8">22.4</sys:Double>
+
+  <!-- Radii: sm 4 / md 8 / lg 14. Tags use md * 0.75. -->
+  <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+  <CornerRadius x:Key="RadiusTag">6</CornerRadius>
+  <CornerRadius x:Key="RadiusPill">999</CornerRadius>
+  <CornerRadius x:Key="RadiusProgress">2</CornerRadius>
+
+  <!-- Composite paddings the components share -->
+  <Thickness x:Key="ButtonPadding">10.08,5.6,10.08,5.6</Thickness>
+  <Thickness x:Key="GhostButtonPadding">2.8,5.6,2.8,5.6</Thickness>
+  <Thickness x:Key="InputPadding">10,6,10,6</Thickness>
+  <Thickness x:Key="TagPadding">10,3,10,3</Thickness>
+  <Thickness x:Key="SegmentPadding">12,7,12,7</Thickness>
+  <Thickness x:Key="CardPadding">8.4</Thickness>
+  <Thickness x:Key="DialogPadding">11.2</Thickness>
+  <Thickness x:Key="WindowChromePadding">11.2,8.4,11.2,8.4</Thickness>
+  <Thickness x:Key="WindowBodyPadding">22.4,16.8,22.4,22.4</Thickness>
+
+  <!-- Fixed sizes the design calls out -->
+  <sys:Double x:Key="IconButtonSize">30</sys:Double>
+  <sys:Double x:Key="InputMinHeight">36</sys:Double>
+  <sys:Double x:Key="RadioDotSize">16</sys:Double>
+  <sys:Double x:Key="SwitchWidth">40</sys:Double>
+  <sys:Double x:Key="SwitchHeight">22</sys:Double>
+  <sys:Double x:Key="SwitchKnobSize">16</sys:Double>
+  <sys:Double x:Key="ProgressTrackHeight">3</sys:Double>
+  <sys:Double x:Key="FlyoutWidth">384</sys:Double>
+  <sys:Double x:Key="FlyoutMaxHeight">560</sys:Double>
+  <sys:Double x:Key="WizardWidth">520</sys:Double>
+  <sys:Double x:Key="ActivityWidth">760</sys:Double>
+  <sys:Double x:Key="DialogWidth">520</sys:Double>
+  <sys:Double x:Key="ToastWidth">348</sys:Double>
+
+  <!--
+    The Nocturne rule signature: freestanding rules fade to transparent 48px from each end.
+    Box outlines and in-control separators stay solid.
+  -->
+  <sys:Double x:Key="RuleFadeLength">48</sys:Double>
+
+</ResourceDictionary>

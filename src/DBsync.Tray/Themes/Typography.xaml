@@ -1,0 +1,122 @@
+<!--
+  Inter for headings and body, with the type scale from docs/README.md §Design Tokens.
+  Mode-independent — type does not change between light and dark.
+
+  Font resolution order is bundled -> installed -> Segoe UI. Dropping the Inter .ttf files into
+  Assets/Fonts is all that is needed to switch from the fallback to the real face; nothing here
+  changes. Until then the app renders in Segoe UI at the correct sizes and weights, so layout is
+  representative but letterforms are not final.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xmlns:text="clr-namespace:DBsync.Tray.Text">
+
+  <FontFamily x:Key="BodyFontFamily">pack://application:,,,/Assets/Fonts/#Inter, Inter, Segoe UI</FontFamily>
+  <FontFamily x:Key="HeadingFontFamily">pack://application:,,,/Assets/Fonts/#Inter, Inter, Segoe UI</FontFamily>
+
+  <!-- Paths and byte counts. Cascadia Mono ships with Windows Terminal; Consolas always exists. -->
+  <FontFamily x:Key="MonoFontFamily">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+  <!-- Headings never go bolder than 500. -->
+  <FontWeight x:Key="HeadingFontWeight">Medium</FontWeight>
+
+  <sys:Double x:Key="FontSizeH4">20</sys:Double>
+  <sys:Double x:Key="FontSizeDialogTitle">20</sys:Double>
+  <sys:Double x:Key="FontSizeBody">15</sys:Double>
+  <sys:Double x:Key="FontSizeLabel">14</sys:Double>
+  <sys:Double x:Key="FontSizeSecondary">12</sys:Double>
+  <sys:Double x:Key="FontSizeMeta">11</sys:Double>
+  <sys:Double x:Key="FontSizeKicker">10</sys:Double>
+  <sys:Double x:Key="FontSizeChrome">13</sys:Double>
+
+  <!-- ── Base ─────────────────────────────────────────────────────────── -->
+  <Style x:Key="BaseTextStyle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource BodyFontFamily}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+  </Style>
+
+  <!-- Body: 15px / 1.55, weight 400 -->
+  <Style x:Key="BodyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+    <Setter Property="LineHeight" Value="23.25" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- h4: 20px / 1.12, -0.015em, weight 500 -->
+  <Style x:Key="H4TextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+    <Setter Property="FontWeight" Value="{DynamicResource HeadingFontWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeH4}" />
+    <Setter Property="LineHeight" Value="22.4" />
+    <Setter Property="text:Tracking.Amount" Value="-0.015" />
+  </Style>
+
+  <!-- Window title bars and segmented options -->
+  <Style x:Key="ChromeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+    <Setter Property="FontWeight" Value="{DynamicResource HeadingFontWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeChrome}" />
+  </Style>
+
+  <!-- UI labels and pair names -->
+  <Style x:Key="LabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeLabel}" />
+  </Style>
+
+  <Style x:Key="SecondaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSecondary}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted55Brush}" />
+  </Style>
+
+  <Style x:Key="MetaTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMeta}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted62Brush}" />
+  </Style>
+
+  <!-- Field labels sit at 70% rather than 55% -->
+  <Style x:Key="FieldLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSecondary}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted70Brush}" />
+    <Setter Property="Margin" Value="0,0,0,5" />
+  </Style>
+
+  <!-- Uppercase kickers: 10-11px, 0.08-0.1em tracking -->
+  <Style x:Key="KickerTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeKicker}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="text:Tracking.Amount" Value="0.1" />
+  </Style>
+
+  <!-- Table headings and the wizard's RECENT label: 11px, 0.08em -->
+  <Style x:Key="TableHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMeta}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted60Brush}" />
+    <Setter Property="text:Tracking.Amount" Value="0.08" />
+  </Style>
+
+  <!-- Paths. Tabular figures keep the activity log's Time column aligned. -->
+  <Style x:Key="MonoTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSecondary}" />
+  </Style>
+
+  <Style x:Key="PathTextStyle" TargetType="TextBlock" BasedOn="{StaticResource MonoTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMeta}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted55Brush}" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <Style x:Key="TabularTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSecondary}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted55Brush}" />
+    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+  </Style>
+
+  <!-- TextBlock has no implicit style by default; make the base one apply app-wide. -->
+  <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}" />
+
+</ResourceDictionary>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>DBsync.Tray</AssemblyName>
+    <RootNamespace>DBsync.Tray</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>DBsync</Product>
+    <Description>DBsync tray application.</Description>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Inter ships with the app rather than being pulled from Google Fonts. Drop the .ttf files
+      into Assets/Fonts and they are picked up automatically; until then the FontFamily
+      resources fall back to an installed Inter, then to Segoe UI. See Themes/Typography.xaml.
+    -->
+    <Resource Include="Assets\Fonts\**\*.ttf" />
+    <Resource Include="Assets\Fonts\**\*.otf" />
+  </ItemGroup>
+
+</Project>
