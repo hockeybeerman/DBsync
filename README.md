@@ -13,7 +13,7 @@ The tray UI is **not** in this repo yet — see [Not built yet](#not-built-yet).
 | `src/DBsync.Contracts` | `net6.0` | DTOs, the named-pipe wire protocol, and `DBsyncClient`. Referenced by the service, the CLI, and (later) the tray app. |
 | `src/DBsync.Service` | `net6.0-windows` | The service: sync engine, config store, SQLite history, pipe server. |
 | `src/DBsync.Cli` | `net6.0-windows` | `dbsync.exe` — drives the service from a terminal. Doubles as a worked example of the contract. |
-| `src/DBsync.Tray` | `net6.0-windows` (WPF) | The per-user tray app. Currently the theming foundation only — see [Tray app](#tray-app). |
+| `src/DBsync.Tray` | `net6.0-windows` (WPF) | The per-user tray app: tray icon and flyout — see [Tray app](#tray-app). |
 
 ## Build and install
 
@@ -144,10 +144,38 @@ re-deriving them.
 
 ## Tray app
 
-The per-user half. So far this is the theming foundation only — no product surface exists yet.
+The per-user half: a notification-area icon and the flyout it opens. Run
+`DBsync.Tray.exe` and it sits in the tray — Windows 11 hides new tray icons in the overflow by
+default, so drag it out of the `^` menu to keep it visible.
 
-**What is there.** The Nocturne token set as WPF resource dictionaries, plus Light / Dark /
-Match Windows switching that follows the OS live:
+Left-click the icon to toggle the flyout; right-click for Open / Pause / Quit. The flyout dismisses
+when it loses focus, like the shell's own flyouts.
+
+**Development flags:** `--show` opens the flyout at launch, `--pin` keeps it open when it loses
+focus (for inspection and screenshots), `--gallery` opens the token gallery, `--audit` runs the
+theme audit headless.
+
+### Live state
+
+The flyout paints from `GetStateAsync()` and then follows `PairChanged` / `StateChanged` push
+events — it never polls. `ServiceConnection` wraps `DBsyncClient` with a reconnect ladder, because
+the client deliberately does not reconnect itself: the tray app is a per-user process and the
+service is a machine-level one, so the service can stop, crash or be upgraded underneath it. On
+every successful connect it re-subscribes and pulls a full state, so killing and restarting the
+service leaves the flyout correct with no user action.
+
+While disconnected the header says so rather than falling back to "Everything in sync" — the
+calmest words it has would be the worst possible default when nothing is syncing. The full banner
+treatment is issue #12.
+
+Status-dependent colour, icon and tag styling live in DataTriggers in the row template, not in the
+view model, so they stay `DynamicResource` and follow an appearance change. `PairViewModel` is a
+projection only: `Detail` and the header line arrive from the service already worded.
+
+### Theming
+
+The Nocturne token set as WPF resource dictionaries, plus Light / Dark / Match Windows switching
+that follows the OS live:
 
 - `Themes/Ramps.xaml`, `Metrics.xaml`, `Typography.xaml` and `Controls.xaml` are
   mode-independent. Only `Theme.Dark.xaml` / `Theme.Light.xaml` differ, and `ThemeManager` swaps
@@ -178,8 +206,9 @@ disappear once the real surfaces land.
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **Every tray surface**: the flyout, pair wizard, activity window, conflict dialog and toasts.
-  The theming foundation above is in place; nothing that renders the product is.
+- **The pair wizard, activity window, conflict dialog and toasts.** The flyout's buttons and rows
+  are all present and styled, but the ones that open a surface that does not exist yet say so
+  instead of pretending — each names the issue that delivers it (#3, #4, #5, #9).
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the

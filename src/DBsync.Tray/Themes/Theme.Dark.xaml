@@ -73,11 +73,22 @@
   <!-- ── Progress ────────────────────────────────────────────────────── -->
   <SolidColorBrush x:Key="ProgressTrackBrush" Color="#FF292B31" />
 
-  <!-- The sweep: transparent -> accent-200 -> transparent, 30% of the track width. -->
-  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="1,0">
-    <GradientStop Offset="0" Color="#00E7E5FE" />
-    <GradientStop Offset="0.5" Color="#FFE7E5FE" />
-    <GradientStop Offset="1" Color="#00E7E5FE" />
+  <!--
+    The sweep: transparent -> accent-200 -> transparent across 30% of the track. The midpoint is
+    accent-200 at 70%, not full strength — the prototype mixes it down so the highlight reads as
+    a sheen over the fill rather than a second bar.
+  -->
+  <Color x:Key="ProgressSweepCoreColor">#B3E7E5FE</Color>
+  <Color x:Key="ProgressSweepEdgeColor">#00E7E5FE</Color>
+
+  <!--
+    The animated copy is built per row inside the flyout's template — a shared brush cannot be
+    animated independently by each row. This one is for static use; both read the same colours.
+  -->
+  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="0.3,0">
+    <GradientStop Offset="0" Color="{StaticResource ProgressSweepEdgeColor}" />
+    <GradientStop Offset="0.5" Color="{StaticResource ProgressSweepCoreColor}" />
+    <GradientStop Offset="1" Color="{StaticResource ProgressSweepEdgeColor}" />
   </LinearGradientBrush>
 
   <!-- ── Tags ────────────────────────────────────────────────────────── -->

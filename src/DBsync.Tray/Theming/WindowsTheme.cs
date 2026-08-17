@@ -15,6 +15,7 @@ public sealed class WindowsTheme : IDisposable
 {
     private const string PersonalizeKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string AppsUseLightTheme = "AppsUseLightTheme";
+    private const string SystemUsesLightTheme = "SystemUsesLightTheme";
 
     private bool _subscribed;
     private bool _disposed;
@@ -28,36 +29,48 @@ public sealed class WindowsTheme : IDisposable
     /// <summary>Raised when the Windows app theme changes. Fires on an arbitrary thread.</summary>
     public event EventHandler<ThemeVariant>? Changed;
 
+    /// <summary>Raised when the shell (taskbar) theme changes. Fires on an arbitrary thread.</summary>
+    public event EventHandler<ThemeVariant>? ShellChanged;
+
     /// <summary>
     /// The current Windows app theme. Defaults to <see cref="ThemeVariant.Dark"/> when the value
-    /// is missing or unreadable — Nocturne's native ground, so a locked-down or unusual machine
-    /// still gets the palette the system was designed in.
+    /// is missing or unreadable.
     /// </summary>
-    public static ThemeVariant Current
+    public static ThemeVariant Current => Read(AppsUseLightTheme);
+
+    /// <summary>
+    /// The theme the shell itself uses — taskbar, Start, system tray. Distinct from
+    /// <see cref="Current"/>: Windows lets the two differ, and the tray glyph sits on the
+    /// taskbar's ground, not the app's, so it has to follow this one to stay visible.
+    /// </summary>
+    public static ThemeVariant Shell => Read(SystemUsesLightTheme);
+
+    private static ThemeVariant Read(string valueName)
     {
-        get
+        try
         {
-            try
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(PersonalizeKey);
-                return key?.GetValue(AppsUseLightTheme) is int value && value != 0
-                    ? ThemeVariant.Light
-                    : ThemeVariant.Dark;
-            }
-            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException
-                                           or IOException)
-            {
-                return ThemeVariant.Dark;
-            }
+            using var key = Registry.CurrentUser.OpenSubKey(PersonalizeKey);
+            return key?.GetValue(valueName) is int value && value != 0
+                ? ThemeVariant.Light
+                : ThemeVariant.Dark;
+        }
+        catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException
+                                       or IOException)
+        {
+            // Nocturne's native ground, so a locked-down machine still gets the palette the
+            // system was designed in.
+            return ThemeVariant.Dark;
         }
     }
 
     private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
         // A theme switch arrives as a General change, along with a good deal else. Re-reading the
-        // registry key is cheap, and the manager only re-themes when the value actually moved.
-        if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.VisualStyle)
-            Changed?.Invoke(this, Current);
+        // registry keys is cheap, and each listener only acts when its value actually moved.
+        if (e.Category is not (UserPreferenceCategory.General or UserPreferenceCategory.VisualStyle)) return;
+
+        Changed?.Invoke(this, Current);
+        ShellChanged?.Invoke(this, Shell);
     }
 
     public void Dispose()

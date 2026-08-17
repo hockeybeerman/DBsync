@@ -68,10 +68,13 @@
   <!-- ── Progress ────────────────────────────────────────────────────── -->
   <SolidColorBrush x:Key="ProgressTrackBrush" Color="#FFCFD3E5" />
 
-  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="1,0">
-    <GradientStop Offset="0" Color="#00423A6A" />
-    <GradientStop Offset="0.5" Color="#FF423A6A" />
-    <GradientStop Offset="1" Color="#00423A6A" />
+  <Color x:Key="ProgressSweepCoreColor">#B3423A6A</Color>
+  <Color x:Key="ProgressSweepEdgeColor">#00423A6A</Color>
+
+  <LinearGradientBrush x:Key="ProgressSweepBrush" StartPoint="0,0" EndPoint="0.3,0">
+    <GradientStop Offset="0" Color="{StaticResource ProgressSweepEdgeColor}" />
+    <GradientStop Offset="0.5" Color="{StaticResource ProgressSweepCoreColor}" />
+    <GradientStop Offset="1" Color="{StaticResource ProgressSweepEdgeColor}" />
   </LinearGradientBrush>
 
   <!-- ── Tags ────────────────────────────────────────────────────────── -->

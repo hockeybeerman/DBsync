@@ -4,6 +4,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- For NotifyIcon only. WPF has no tray-icon primitive of its own. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -23,6 +25,20 @@
     -->
     <Resource Include="Assets\Fonts\**\*.ttf" />
     <Resource Include="Assets\Fonts\**\*.otf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DBsync.Contracts\DBsync.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      UseWindowsForms adds these to the implicit usings, where they collide with WPF on
+      Application, Icon, FontFamily and more. This app is WPF; the two files that genuinely need
+      WinForms or GDI+ import them explicitly, under an alias.
+    -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
 </Project>

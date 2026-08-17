@@ -42,6 +42,12 @@ public sealed class ThemeManager : INotifyPropertyChanged, IDisposable
     /// <summary>The process-wide instance. Set up once by <c>App</c> at startup.</summary>
     public static ThemeManager Current { get; private set; } = null!;
 
+    /// <summary>
+    /// The OS theme watcher. Exposed so the tray icon can follow the *shell* theme, which is a
+    /// different preference from the app theme this manager tracks.
+    /// </summary>
+    public WindowsTheme Windows => _windows;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>Raised after the palette actually changes, with the new variant.</summary>
