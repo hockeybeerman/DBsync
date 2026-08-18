@@ -16,6 +16,7 @@
         <ResourceDictionary Source="Themes/Controls.xaml" />
         <ResourceDictionary Source="Themes/Flyout.xaml" />
         <ResourceDictionary Source="Themes/Wizard.xaml" />
+        <ResourceDictionary Source="Themes/Activity.xaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

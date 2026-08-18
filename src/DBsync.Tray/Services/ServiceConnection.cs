@@ -38,6 +38,9 @@ public sealed class ServiceConnection : IAsyncDisposable
     /// <summary>Connected or lost. The banner in #12 hangs off this.</summary>
     public event Action<bool>? ConnectionChanged;
 
+    /// <summary>A row was appended to the activity log.</summary>
+    public event Action<ActivityEntry>? LogAppended;
+
     public bool IsConnected => _client?.IsConnected == true;
 
     public void Start() => _loop = Task.Run(() => RunAsync(_cts.Token));
@@ -131,6 +134,11 @@ public sealed class ServiceConnection : IAsyncDisposable
             case IpcEventKind.StateChanged:
                 var state = message.PayloadAs<ServiceState>();
                 Post(() => StateReplaced?.Invoke(state));
+                break;
+
+            case IpcEventKind.LogAppended:
+                var appended = message.PayloadAs<LogAppendedEvent>().Entry;
+                Post(() => LogAppended?.Invoke(appended));
                 break;
         }
     }

@@ -18,10 +18,15 @@ public partial class App : Application
     private TrayIconHost? _tray;
     private FlyoutWindow? _flyout;
     private WizardWindow? _wizard;
+    private ActivityWindow? _activity;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Before anything else: an unhandled exception in a tray app otherwise removes the icon
+        // and leaves no trace of why.
+        CrashLog.Install(this);
 
         // Theming comes up before any window, so the first frame is already in the right palette
         // rather than flashing the default one.
@@ -81,10 +86,19 @@ public partial class App : Application
     /// Row click: Conflict opens the conflict dialog, anything else that pair's detail. Neither
     /// surface exists yet (#5, #9), so this is where they will be wired in.
     /// </summary>
-    private void OnPairActivated(PairViewModel pair) =>
-        ReportUnbuilt(pair.Status == Contracts.PairStatus.Conflict
-            ? "The conflict dialog arrives with issue #5."
-            : "Per-pair settings arrive with issue #9.");
+    private void OnPairActivated(PairViewModel pair)
+    {
+        if (pair.Status == Contracts.PairStatus.Conflict)
+        {
+            ReportUnbuilt("The conflict dialog arrives with issue #5.");
+            return;
+        }
+
+        // The prototype opens the activity window for a non-conflict row as scaffolding; the real
+        // target is that pair's detail view, which is #9. Until then, show its history filtered to
+        // it, which is at least about the row that was clicked.
+        ShowActivity(pair.Id);
+    }
 
     private void OnNavigationRequested(string target)
     {
@@ -94,12 +108,38 @@ public partial class App : Application
                 ShowWizard();
                 break;
             case "activity":
-                ReportUnbuilt("The activity window arrives with issue #4.");
+                ShowActivity();
                 break;
             default:
                 ReportUnbuilt("A settings window is not designed yet — see issue #8.");
                 break;
         }
+    }
+
+    /// <summary>
+    /// Opens the activity window, optionally scoped to one pair. Only one is kept, so repeated
+    /// clicks bring the existing window forward rather than stacking copies.
+    /// </summary>
+    private void ShowActivity(string? pairId = null)
+    {
+        _flyout?.HideFlyout();
+
+        if (_activity is not null)
+        {
+            if (_activity.WindowState == WindowState.Minimized) _activity.WindowState = WindowState.Normal;
+            _activity.Activate();
+            return;
+        }
+
+        var viewModel = new ActivityViewModel(_connection!);
+        _activity = new ActivityWindow(viewModel);
+        _activity.ExportRequested += () => ReportUnbuilt("CSV export arrives with issue #7.");
+        _activity.ReviewConflictsRequested += () => ReportUnbuilt("The conflict dialog arrives with issue #5.");
+        _activity.Closed += (_, _) => _activity = null;
+        _activity.Show();
+        _activity.Activate();
+
+        if (pairId is not null) viewModel.SelectPair(pairId);
     }
 
     /// <summary>

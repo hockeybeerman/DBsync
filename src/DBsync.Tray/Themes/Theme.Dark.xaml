@@ -100,6 +100,9 @@
   <SolidColorBrush x:Key="TagAccentBackgroundBrush" Color="#FF423A6A" />
   <SolidColorBrush x:Key="TagAccentForegroundBrush" Color="#FFF5F4FF" />
 
+  <!-- Activity log, Received glyph: neutral-300, as the design names it. -->
+  <SolidColorBrush x:Key="EventReceivedBrush" Color="#FFCFD3E5" />
+
   <!-- ── Pair-row left edge, by status ───────────────────────────────── -->
   <SolidColorBrush x:Key="EdgeSyncingBrush" Color="#FF5D5294" />
   <SolidColorBrush x:Key="EdgeConflictBrush" Color="#FF9184D9" />

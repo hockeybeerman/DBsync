@@ -187,6 +187,21 @@ Status-dependent colour, icon and tag styling live in DataTriggers in the row te
 view model, so they stay `DynamicResource` and follow an appearance change. `PairViewModel` is a
 projection only: `Detail` and the header line arrive from the service already worded.
 
+### The activity window
+
+The audit trail, reached from either Activity button. Rows arrive from `GetActivityAsync` and then
+append live from the `LogAppended` push event — a sync happening while the window is open shows up
+without a re-query.
+
+Filters (pair, event kind, 24 hours / 7 days / 30 days) are beyond the mock, which shows a fixed
+24-hour view. The header counters are scoped to whatever is selected, including the subline: saying
+"across 4 folder pairs" while showing one pair's rows would misdescribe the numbers next to it.
+
+Paging is server-side via `ActivityQuery.Offset`, fetched as the list nears its end, and the list
+virtualises with recycling — a month of history never crosses the pipe at once. `ActivityEntry.Message`
+carries the Win32 text on failures; it is surfaced in the row tooltip rather than a column, since it
+is long and rare.
+
 ### Theming
 
 The Nocturne token set as WPF resource dictionaries, plus Light / Dark / Match Windows switching
@@ -221,9 +236,9 @@ disappear once the real surfaces land.
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **The activity window, conflict dialog and toasts.** The flyout's buttons and rows are all
-  present and styled, but the ones that open a surface that does not exist yet say so instead of
-  pretending — each names the issue that delivers it (#4, #5, #9).
+- **The conflict dialog and toasts.** The remaining buttons and rows are present and styled, but
+  the ones that open a surface that does not exist yet say so instead of pretending — each names
+  the issue that delivers it (#5, #7, #9).
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the

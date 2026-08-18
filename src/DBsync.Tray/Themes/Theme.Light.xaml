@@ -91,6 +91,13 @@
   <SolidColorBrush x:Key="TagAccentBackgroundBrush" Color="#FFD2CEFD" />
   <SolidColorBrush x:Key="TagAccentForegroundBrush" Color="#FF2B2741" />
 
+  <!--
+    Activity log, Received glyph. The design names neutral-300, which is legible on the dark
+    ground but all but disappears on the pale one. It mirrors to neutral-700, the same step the
+    calm-text role takes.
+  -->
+  <SolidColorBrush x:Key="EventReceivedBrush" Color="#FF595D6C" />
+
   <!-- ── Pair-row left edge, by status ───────────────────────────────── -->
   <!-- The edges track the accent role, so they stay legible against the pale ground. -->
   <SolidColorBrush x:Key="EdgeSyncingBrush" Color="#FF796CBF" />
