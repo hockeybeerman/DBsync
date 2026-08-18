@@ -1,0 +1,81 @@
+<!--
+  Conflict dialog. The two selectable cards carry the whole decision, so their selected state has
+  to be unmistakable: a 1px accent border against the divider used when unselected.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:text="clr-namespace:DBsync.Tray.Text">
+
+  <!-- ── Copy card ────────────────────────────────────────────────────────
+       A button, because picking one is an action. Sits on the background colour so it reads as
+       inset into the surface the dialog is painted on.
+  -->
+  <Style x:Key="CopyCardStyle" TargetType="RadioButton">
+    <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8.4" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource AccentFocusVisual}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border x:Name="Chrome"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{DynamicResource RadiusMd}"
+                  Padding="{TemplateBinding Padding}"
+                  SnapsToDevicePixels="True">
+            <ContentPresenter />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="BorderBrush"
+                      Value="{DynamicResource InputHoverBorderBrush}" />
+            </Trigger>
+            <!-- Selection last, so it wins over hover: which card is chosen must never be in doubt. -->
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- THIS PC / NETWORK SHARE. 10px, 0.1em tracking, accent. -->
+  <Style x:Key="CopyCardKickerStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeKicker}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="text:Tracking.Amount" Value="0.1" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+
+  <Style x:Key="CopyCardWhenStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeLabel}" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+
+  <Style x:Key="CopyCardDetailStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSecondary}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted55Brush}" />
+  </Style>
+
+  <!-- ── Dialog chrome ────────────────────────────────────────────────── -->
+  <Style x:Key="DialogTitleStyle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+    <Setter Property="FontWeight" Value="{DynamicResource HeadingFontWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeDialogTitle}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style x:Key="DialogBodyStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeLabel}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted85Brush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="LineHeight" Value="20" />
+  </Style>
+
+</ResourceDictionary>

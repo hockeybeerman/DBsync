@@ -19,6 +19,7 @@ public partial class App : Application
     private FlyoutWindow? _flyout;
     private WizardWindow? _wizard;
     private ActivityWindow? _activity;
+    private ConflictDialog? _conflict;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -90,7 +91,7 @@ public partial class App : Application
     {
         if (pair.Status == Contracts.PairStatus.Conflict)
         {
-            ReportUnbuilt("The conflict dialog arrives with issue #5.");
+            ShowConflicts(pair.Id);
             return;
         }
 
@@ -117,6 +118,42 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// Opens the conflict dialog on the open conflicts, optionally scoped to one pair. Closes
+    /// itself once there is nothing left to decide.
+    /// </summary>
+    private void ShowConflicts(string? pairId = null, Window? owner = null)
+    {
+        if (_conflict is not null)
+        {
+            _conflict.Activate();
+            return;
+        }
+
+        if (owner is null) _flyout?.HideFlyout();
+
+        var viewModel = new ConflictViewModel(_connection!);
+        _conflict = new ConflictDialog(viewModel, owner);
+        _conflict.Resolved += (title, body) => ReportToast(title, body);
+        _conflict.Closed += (_, _) => _conflict = null;
+        _conflict.ShowWithBackdrop();
+
+        _ = viewModel.LoadAsync(pairId);
+    }
+
+    /// <summary>
+    /// Stands in for the Windows toast #6 will raise. The copy is already the design's, so this
+    /// swaps for a real ToastNotification without touching the callers.
+    /// <para>
+    /// Posted rather than shown inline: a toast does not block, and this is raised from the middle
+    /// of the conflict dialog's resolve loop — a modal here would stall it between files.
+    /// </para>
+    /// </summary>
+    private void ReportToast(string title, string body) =>
+        Dispatcher.BeginInvoke(new Action(() =>
+            MessageBox.Show(body, title, MessageBoxButton.OK, MessageBoxImage.Information)),
+            System.Windows.Threading.DispatcherPriority.Background);
+
+    /// <summary>
     /// Opens the activity window, optionally scoped to one pair. Only one is kept, so repeated
     /// clicks bring the existing window forward rather than stacking copies.
     /// </summary>
@@ -134,7 +171,7 @@ public partial class App : Application
         var viewModel = new ActivityViewModel(_connection!);
         _activity = new ActivityWindow(viewModel);
         _activity.ExportRequested += () => ReportUnbuilt("CSV export arrives with issue #7.");
-        _activity.ReviewConflictsRequested += () => ReportUnbuilt("The conflict dialog arrives with issue #5.");
+        _activity.ReviewConflictsRequested += () => ShowConflicts(owner: _activity);
         _activity.Closed += (_, _) => _activity = null;
         _activity.Show();
         _activity.Activate();

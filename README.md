@@ -202,6 +202,27 @@ virtualises with recycling — a month of history never crosses the pipe at once
 carries the Win32 text on failures; it is surfaced in the row tooltip rather than a column, since it
 is long and rare.
 
+### The conflict dialog
+
+Reached from a Conflict row in the flyout, or from "Review conflicts" in the activity window. It
+works through open conflicts one at a time, so every decision is made about a named file.
+
+This is the only surface that decides which copy of a file survives, so it is deliberately
+conservative: nothing resolves until a button is pressed, the primary action always names the copy
+it will keep ("Keep this PC" / "Keep network copy"), the apply-to-all checkbox states its exact
+count rather than an open-ended "all" and hides when there is nothing else to apply to, and Escape
+dismisses without deciding — it is bound to neither resolution, so a stray keypress cannot choose.
+
+The service parks conflicts (an open conflict is excluded from reconciliation until resolved), so
+neither copy moves while the dialog is open and the UI needs no guard of its own.
+
+"Keep both" renames this PC's copy to `<name> (<user>, <machine>).<ext>` and leaves both files on
+both sides — no data is lost either way.
+
+The design's backdrop covers "the whole app surface". Here it dims whichever window opened the
+dialog; when it is opened from the tray there is no app surface to dim, and darkening the user's
+whole desktop for a file decision would be more intrusive than the design intends.
+
 ### Theming
 
 The Nocturne token set as WPF resource dictionaries, plus Light / Dark / Match Windows switching
@@ -236,9 +257,9 @@ disappear once the real surfaces land.
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **The conflict dialog and toasts.** The remaining buttons and rows are present and styled, but
-  the ones that open a surface that does not exist yet say so instead of pretending — each names
-  the issue that delivers it (#5, #7, #9).
+- **Real Windows toasts.** Resolutions already produce the design's toast copy; it is shown in a
+  message box until #6 replaces that with a `ToastNotification`. The remaining unbuilt buttons say
+  which issue delivers them (#7, #9).
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the

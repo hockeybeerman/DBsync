@@ -1,0 +1,103 @@
+<Window x:Class="DBsync.Tray.Views.ConflictDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icons="clr-namespace:DBsync.Tray.Icons"
+        xmlns:views="clr-namespace:DBsync.Tray.Views"
+        SizeToContent="WidthAndHeight"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" ResizeMode="NoResize"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
+
+  <!--
+    Both copies changed. 520px card on the surface colour, over a backdrop that dims whichever
+    window opened it.
+  -->
+
+  <Window.Resources>
+    <views:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+  </Window.Resources>
+
+  <Grid x:Name="Root" Width="520" Margin="24" RenderTransformOrigin="0.5,1">
+    <Grid.RenderTransform>
+      <TranslateTransform x:Name="RiseTransform" Y="10" />
+    </Grid.RenderTransform>
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            Effect="{DynamicResource ShadowLgEffect}" />
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource EdgeLgBrush}" BorderThickness="1"
+            Padding="11.2">
+      <StackPanel>
+
+        <!-- Title -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8.4">
+          <icons:Icon Key="WarningDiamond" Size="17" Margin="0,0,5.6,0"
+                      Foreground="{DynamicResource AccentBrush}" />
+          <TextBlock Text="Both copies changed" Style="{StaticResource DialogTitleStyle}" />
+        </StackPanel>
+
+        <!--
+          Body. The share path is monospace, so it is built from runs rather than one string.
+          No leading or trailing spaces in the run text: XAML already collapses the whitespace
+          between inline elements to a single space, and adding our own doubles it.
+        -->
+        <TextBlock Style="{StaticResource DialogBodyStyle}" Margin="0,0,0,8.4">
+          <Run Text="{Binding FileName, Mode=OneWay}" />
+          <Run Text="was edited on this PC and on" />
+          <Run Text="{Binding SharePath, Mode=OneWay}"
+               FontFamily="{DynamicResource MonoFontFamily}" FontSize="13" />
+          <Run Text="since the last sync. Choose which copy wins." />
+        </TextBlock>
+
+        <!-- The two copies -->
+        <Grid Margin="0,0,0,8.4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <RadioButton Grid.Column="0" GroupName="Winner" Margin="0,0,4.2,0"
+                       Style="{StaticResource CopyCardStyle}"
+                       IsChecked="{Binding WinnerIsLocal, Mode=OneWay}"
+                       Command="{Binding PickLocalCommand}">
+            <StackPanel>
+              <TextBlock Text="THIS PC" Style="{StaticResource CopyCardKickerStyle}" />
+              <TextBlock Text="{Binding LocalWhen}" Style="{StaticResource CopyCardWhenStyle}" />
+              <TextBlock Text="{Binding LocalDetail}" Style="{StaticResource CopyCardDetailStyle}" />
+            </StackPanel>
+          </RadioButton>
+
+          <RadioButton Grid.Column="1" GroupName="Winner" Margin="4.2,0,0,0"
+                       Style="{StaticResource CopyCardStyle}"
+                       IsChecked="{Binding WinnerIsShare, Mode=OneWay}"
+                       Command="{Binding PickShareCommand}">
+            <StackPanel>
+              <TextBlock Text="NETWORK SHARE" Style="{StaticResource CopyCardKickerStyle}" />
+              <TextBlock Text="{Binding ShareWhen}" Style="{StaticResource CopyCardWhenStyle}" />
+              <TextBlock Text="{Binding ShareDetail}" Style="{StaticResource CopyCardDetailStyle}" />
+            </StackPanel>
+          </RadioButton>
+        </Grid>
+
+        <!-- Only offered when there is actually something else to apply it to. -->
+        <CheckBox Style="{StaticResource CheckBoxStyle}" Margin="0,0,0,8.4"
+                  IsChecked="{Binding ApplyToPair}"
+                  Content="{Binding ApplyToPairLabel}"
+                  Visibility="{Binding HasOthersInPair, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Actions -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5.6,0,0">
+          <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,5.6,0"
+                  Content="Keep both" Command="{Binding KeepBothCommand}"
+                  ToolTip="Rename this PC's copy and keep them both, on both sides" />
+          <Button Style="{StaticResource PrimaryButtonStyle}"
+                  Content="{Binding PrimaryLabel}" Command="{Binding ResolveCommand}" />
+        </StackPanel>
+
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>
