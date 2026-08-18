@@ -407,7 +407,36 @@ public sealed class SyncEngine : IAsyncDisposable
             ? DestinationKind.Unc
             : DestinationKind.Drive;
 
+        RejectInvisibleDrive(pair.SharePath);
+
         return pair;
+    }
+
+    /// <summary>
+    /// Rejects a destination on a drive letter this process cannot see.
+    /// <para>
+    /// Drive letters are per-session. A mapped drive belongs to the interactive user's logon and
+    /// does not exist for the service account, so a pair saved as <c>Z:\team\projects</c> would
+    /// sit in Waiting forever, reporting a share that is perfectly healthy as unreachable. The
+    /// tray app resolves the letter to UNC before saving; this stops the CLI, or a hand-edited
+    /// config, from getting past that.
+    /// </para>
+    /// <para>
+    /// A local second disk is a legitimate destination and the service can see it, so the test is
+    /// "does this root exist here", not "is it a drive letter".
+    /// </para>
+    /// </summary>
+    private static void RejectInvisibleDrive(string sharePath)
+    {
+        if (sharePath.StartsWith(@"\\", StringComparison.Ordinal)) return;
+
+        var root = Path.GetPathRoot(sharePath);
+        if (string.IsNullOrEmpty(root) || Directory.Exists(root)) return;
+
+        throw new ArgumentException(
+            $"Drive {root.TrimEnd('\\')} does not exist for the DBsync service. Mapped drives " +
+            "belong to your session and are invisible to the service, which runs as LocalSystem — " +
+            "use the UNC path the drive points at instead.");
     }
 
     private static bool Nested(string outer, string inner)

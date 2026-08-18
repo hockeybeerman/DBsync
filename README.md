@@ -152,8 +152,23 @@ Left-click the icon to toggle the flyout; right-click for Open / Pause / Quit. T
 when it loses focus, like the shell's own flyouts.
 
 **Development flags:** `--show` opens the flyout at launch, `--pin` keeps it open when it loses
-focus (for inspection and screenshots), `--gallery` opens the token gallery, `--audit` runs the
-theme audit headless.
+focus (for inspection and screenshots), `--wizard` opens the add-pair wizard, `--gallery` opens
+the token gallery, `--audit` runs the theme audit headless.
+
+### The pair wizard
+
+Three steps — local folder, destination, sync options — reached from "Add folder pair". Step 2's
+validation line is the service's own copy, rendered verbatim: the probe runs service-side on
+purpose, because that is the account that will do the syncing, and a share this user can reach may
+be invisible to LocalSystem.
+
+**Mapped drives resolve to UNC before saving.** Drive letters are per-session and do not exist for
+the service, so a pair saved as `Z:\team\projects` would sit in Waiting forever while reporting a
+perfectly healthy share as unreachable. The wizard rewrites the letter to its UNC target
+(`WNetGetConnection`), and `SyncEngine.Validate` refuses any destination on a drive root the
+service itself cannot see, so the CLI and hand-edited config cannot get past it either. A local
+second disk is a legitimate destination and is still allowed — the test is "can this process see
+that root", not "is it a drive letter".
 
 ### Live state
 
@@ -206,9 +221,9 @@ disappear once the real surfaces land.
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **The pair wizard, activity window, conflict dialog and toasts.** The flyout's buttons and rows
-  are all present and styled, but the ones that open a surface that does not exist yet say so
-  instead of pretending — each names the issue that delivers it (#3, #4, #5, #9).
+- **The activity window, conflict dialog and toasts.** The flyout's buttons and rows are all
+  present and styled, but the ones that open a surface that does not exist yet say so instead of
+  pretending — each names the issue that delivers it (#4, #5, #9).
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the
@@ -230,8 +245,9 @@ Deliberately out of scope for this pass — the design covers them and the contr
   authentication require credentials on the pair (`--user`/`--password`), or reconfiguring the
   service to run as a domain account with access.
 - **Mapped drive letters** (`Z:\...`) are per-session and do not exist in the service's session.
-  Prefer the UNC path the letter points at; the wizard's "Mapped drive" option should resolve to
-  UNC before saving.
+  The wizard resolves them to UNC before saving and the service rejects what it cannot see — but
+  note that running `DBsync.Service.exe` directly from a console runs it as *you*, where mapped
+  drives are visible, so that guard only bites once the service is installed under LocalSystem.
 - Volume shadow copy needs a local NTFS volume and shadow storage available. `TryCreate` returns
   null and the file is logged as skipped rather than failing when it cannot snapshot.
 - Content comparison is size + mtime, not a hash. Two edits that produce identical size *and*

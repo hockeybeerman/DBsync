@@ -55,7 +55,7 @@ public sealed class ThemeManager : INotifyPropertyChanged, IDisposable
 
     public static ThemeManager Initialize(Application application)
     {
-        Current = new ThemeManager(application, UserSettings.Load());
+        Current = new ThemeManager(application, UserSettings.Current);
         return Current;
     }
 

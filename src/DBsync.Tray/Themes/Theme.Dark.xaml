@@ -91,6 +91,9 @@
     <GradientStop Offset="1" Color="{StaticResource ProgressSweepEdgeColor}" />
   </LinearGradientBrush>
 
+  <!-- Step indicator, upcoming step: neutral-800, as the design names it. -->
+  <SolidColorBrush x:Key="StepBarInactiveBrush" Color="#FF3F424D" />
+
   <!-- ── Tags ────────────────────────────────────────────────────────── -->
   <SolidColorBrush x:Key="TagNeutralBackgroundBrush" Color="#FF3F424D" />
   <SolidColorBrush x:Key="TagNeutralForegroundBrush" Color="#FFF3F5FE" />

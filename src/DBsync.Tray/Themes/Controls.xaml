@@ -159,6 +159,92 @@
     <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
   </Style>
 
+  <!--
+    PasswordBox cannot derive from the TextBox style — it is a separate control with its own
+    template contract — so the chrome is repeated here rather than shared.
+  -->
+  <Style x:Key="PasswordInputStyle" TargetType="PasswordBox">
+    <Setter Property="FontFamily" Value="{DynamicResource BodyFontFamily}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeLabel}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource AccentSelectionBrush}" />
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="{DynamicResource InputPadding}" />
+    <Setter Property="MinHeight" Value="{DynamicResource InputMinHeight}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="PasswordBox">
+          <Border x:Name="Chrome"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{DynamicResource RadiusMd}"
+                  SnapsToDevicePixels="True">
+            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                          VerticalAlignment="Center" Focusable="False"
+                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="BorderBrush"
+                      Value="{DynamicResource InputHoverBorderBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!--
+    Checkboxes take the radio's circular dot. That is the design's own choice: the prototype
+    applies the .radio class and .dot element to checkbox inputs too, so the two read as one
+    family rather than introducing a second selection shape.
+  -->
+  <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
+    <Setter Property="FontFamily" Value="{DynamicResource BodyFontFamily}" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeLabel}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource AccentFocusVisual}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <StackPanel Orientation="Horizontal">
+            <Grid Width="{DynamicResource RadioDotSize}" Height="{DynamicResource RadioDotSize}"
+                  VerticalAlignment="Top" Margin="0,3,8,0">
+              <Border x:Name="Dot"
+                      CornerRadius="{DynamicResource RadiusPill}"
+                      BorderThickness="1.5"
+                      BorderBrush="{DynamicResource DividerBrush}"
+                      Background="Transparent"
+                      SnapsToDevicePixels="True" />
+              <Ellipse x:Name="Centre" Width="5" Height="5" Visibility="Collapsed"
+                       Fill="{DynamicResource AccentBrush}" />
+            </Grid>
+            <ContentPresenter VerticalAlignment="Center" />
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Dot" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Dot" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+              <Setter TargetName="Centre" Property="Visibility" Value="Visible" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- ── Tags ─────────────────────────────────────────────────────────── -->
   <Style x:Key="BaseTagStyle" TargetType="ContentControl">
     <Setter Property="FontFamily" Value="{DynamicResource BodyFontFamily}" />

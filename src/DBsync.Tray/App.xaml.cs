@@ -17,6 +17,7 @@ public partial class App : Application
     private ShellViewModel? _shell;
     private TrayIconHost? _tray;
     private FlyoutWindow? _flyout;
+    private WizardWindow? _wizard;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -43,6 +44,8 @@ public partial class App : Application
         StartTrayApp(
             showImmediately: e.Args.Contains("--show", StringComparer.OrdinalIgnoreCase),
             pinOpen: e.Args.Contains("--pin", StringComparer.OrdinalIgnoreCase));
+
+        if (e.Args.Contains("--wizard", StringComparer.OrdinalIgnoreCase)) ShowWizard();
     }
 
     /// <param name="showImmediately">
@@ -83,12 +86,45 @@ public partial class App : Application
             ? "The conflict dialog arrives with issue #5."
             : "Per-pair settings arrive with issue #9.");
 
-    private void OnNavigationRequested(string target) => ReportUnbuilt(target switch
+    private void OnNavigationRequested(string target)
     {
-        "wizard" => "The add/edit pair wizard arrives with issue #3.",
-        "activity" => "The activity window arrives with issue #4.",
-        _ => "A settings window is not designed yet — see issue #8.",
-    });
+        switch (target)
+        {
+            case "wizard":
+                ShowWizard();
+                break;
+            case "activity":
+                ReportUnbuilt("The activity window arrives with issue #4.");
+                break;
+            default:
+                ReportUnbuilt("A settings window is not designed yet — see issue #8.");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Opens the add/edit wizard. <paramref name="editing"/> is null for a new pair; #9 will pass
+    /// an existing one.
+    /// </summary>
+    private void ShowWizard(Contracts.FolderPair? editing = null)
+    {
+        if (_wizard is not null)
+        {
+            _wizard.Activate();
+            return;
+        }
+
+        // The flyout dismisses on deactivate, so it is already gone by the time the wizard has
+        // focus — which is what keeps the two from overlapping.
+        _flyout?.HideFlyout();
+
+        var viewModel = new WizardViewModel(_connection!, UserSettings.Current, editing);
+        _wizard = new WizardWindow(viewModel);
+        _wizard.Completed += _ => _wizard = null;
+        _wizard.Closed += (_, _) => _wizard = null;
+        _wizard.Show();
+        _wizard.Activate();
+    }
 
     /// <summary>
     /// Says plainly that a surface is not built rather than pretending the click did something.

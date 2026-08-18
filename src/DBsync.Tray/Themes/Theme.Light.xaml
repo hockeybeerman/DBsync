@@ -77,6 +77,14 @@
     <GradientStop Offset="1" Color="{StaticResource ProgressSweepEdgeColor}" />
   </LinearGradientBrush>
 
+  <!--
+    Step indicator, upcoming step. The design names neutral-800 and does not list it as remapped,
+    but taken literally that would make the *upcoming* bar darker than the active one on a pale
+    ground — the opposite of the emphasis it carries in dark. It mirrors to neutral-300, exactly
+    as the progress track does.
+  -->
+  <SolidColorBrush x:Key="StepBarInactiveBrush" Color="#FFCFD3E5" />
+
   <!-- ── Tags ────────────────────────────────────────────────────────── -->
   <SolidColorBrush x:Key="TagNeutralBackgroundBrush" Color="#FFCFD3E5" />
   <SolidColorBrush x:Key="TagNeutralForegroundBrush" Color="#FF292B31" />

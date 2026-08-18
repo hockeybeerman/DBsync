@@ -25,7 +25,30 @@ public sealed class UserSettings
 
     public static string FilePath => Path.Combine(Directory, "tray.json");
 
+    /// <summary>
+    /// The process-wide instance. Appearance and the wizard's recent-folder list share one file,
+    /// so they must share one object — two loaded copies would overwrite each other on save.
+    /// </summary>
+    public static UserSettings Current { get; } = Load();
+
     public AppearanceMode Appearance { get; set; } = AppearanceMode.MatchWindows;
+
+    /// <summary>
+    /// Local folders offered under RECENT in the wizard's first step. Per-user like appearance,
+    /// and equally not the service's business — it is a memory of what this person browsed to.
+    /// </summary>
+    public List<string> RecentLocalFolders { get; set; } = new();
+
+    /// <summary>Most-recent-first, de-duplicated case-insensitively, capped at the design's three.</summary>
+    public void RememberLocalFolder(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        RecentLocalFolders.RemoveAll(entry => string.Equals(entry, path, StringComparison.OrdinalIgnoreCase));
+        RecentLocalFolders.Insert(0, path);
+
+        while (RecentLocalFolders.Count > 3) RecentLocalFolders.RemoveAt(RecentLocalFolders.Count - 1);
+    }
 
     public static UserSettings Load()
     {
