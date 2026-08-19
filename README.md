@@ -223,6 +223,23 @@ The design's backdrop covers "the whole app surface". Here it dims whichever win
 dialog; when it is opened from the tray there is no app surface to dim, and darkening the user's
 whole desktop for a file decision would be more intrusive than the design intends.
 
+### Notifications
+
+Every string is in `Notifications/ToastCopy.cs`, transcribed from the table in
+[docs/README.md](docs/README.md) §5 — one file to check the words against the design.
+
+Toasts go to the shell via `ToastNotificationManagerCompat`, which registers the AUMID an
+unpackaged app needs. **`Show()` succeeding does not mean the toast was shown**: when notifications
+are off for the app, the user, or by policy, the shell accepts it and silently discards it —
+it never even reaches the notification centre. So delivery is decided by asking
+`ToastNotifier.Setting`, and anything the shell will not display falls back to the in-app card the
+design specifies, stacked bottom-right above the flyout. That check runs per notification, so
+turning notifications back on takes effect immediately.
+
+"Catching up on N queued changes" uses `ServiceState.QueuedChanges` rather than an invented number.
+The service snapshots the backlog *before* releasing the workers — a moment later they are draining
+it — and counts all three places work sits, since while paused nearly all of it is in the channel.
+
 ### Theming
 
 The Nocturne token set as WPF resource dictionaries, plus Light / Dark / Match Windows switching
@@ -257,9 +274,8 @@ disappear once the real surfaces land.
 
 Deliberately out of scope for this pass — the design covers them and the contract is ready:
 
-- **Real Windows toasts.** Resolutions already produce the design's toast copy; it is shown in a
-  message box until #6 replaces that with a `ToastNotification`. The remaining unbuilt buttons say
-  which issue delivers them (#7, #9).
+- **CSV export and per-pair settings** (#7, #9). Those buttons are present and styled but say which
+  issue delivers them.
 - **Real Windows toasts** via `ToastNotificationManager` (a tray-app concern; the service already
   pushes the events that trigger them).
 - **CSV export** for the activity log — `GetActivity` returns the rows; formatting is the

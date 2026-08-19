@@ -1,0 +1,56 @@
+<Window x:Class="DBsync.Tray.Views.ToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icons="clr-namespace:DBsync.Tray.Icons"
+        SizeToContent="Height" Width="396"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" ShowActivated="False"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
+
+  <!--
+    In-app fallback for when the shell will not take a toast. 348px card plus the shadow margin,
+    stacked bottom-right above the flyout. Matches the mock in docs/DBsync.dc.html.
+  -->
+
+  <Grid x:Name="Root" Width="348" Margin="24,0,24,0" RenderTransformOrigin="0.5,1">
+    <Grid.RenderTransform>
+      <TranslateTransform x:Name="RiseTransform" Y="10" />
+    </Grid.RenderTransform>
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            Effect="{DynamicResource ShadowLgEffect}" />
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource EdgeLgBrush}" BorderThickness="1"
+            Padding="11.2" MouseLeftButtonUp="OnClicked">
+      <StackPanel>
+
+        <!-- Header: brand mark, name, dismiss -->
+        <Grid Margin="0,0,0,5.6">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <icons:Icon Grid.Column="0" Key="ShuffleSimple" Size="13" Margin="0,0,5.6,0"
+                      Foreground="{DynamicResource AccentBrush}" />
+          <TextBlock Grid.Column="1" Text="DBsync" FontSize="11" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextMuted55Brush}" />
+          <Button Grid.Column="2" Width="22" Height="22" Padding="0"
+                  Style="{StaticResource IconButtonStyle}" Click="OnDismiss" ToolTip="Dismiss">
+            <icons:Icon Key="X" Size="11" Foreground="{DynamicResource TextMuted55Brush}" />
+          </Button>
+        </Grid>
+
+        <TextBlock x:Name="TitleText" FontFamily="{DynamicResource HeadingFontFamily}"
+                   FontWeight="{DynamicResource HeadingFontWeight}" FontSize="14"
+                   TextWrapping="Wrap" Margin="0,0,0,2.8" />
+        <TextBlock x:Name="BodyText" FontSize="12" TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextMuted55Brush}" />
+
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

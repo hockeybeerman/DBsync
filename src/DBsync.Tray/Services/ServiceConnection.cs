@@ -41,6 +41,9 @@ public sealed class ServiceConnection : IAsyncDisposable
     /// <summary>A row was appended to the activity log.</summary>
     public event Action<ActivityEntry>? LogAppended;
 
+    /// <summary>A conflict was parked and needs a decision.</summary>
+    public event Action<ConflictRaisedEvent>? ConflictRaised;
+
     public bool IsConnected => _client?.IsConnected == true;
 
     public void Start() => _loop = Task.Run(() => RunAsync(_cts.Token));
@@ -139,6 +142,11 @@ public sealed class ServiceConnection : IAsyncDisposable
             case IpcEventKind.LogAppended:
                 var appended = message.PayloadAs<LogAppendedEvent>().Entry;
                 Post(() => LogAppended?.Invoke(appended));
+                break;
+
+            case IpcEventKind.ConflictRaised:
+                var raised = message.PayloadAs<ConflictRaisedEvent>();
+                Post(() => ConflictRaised?.Invoke(raised));
                 break;
         }
     }

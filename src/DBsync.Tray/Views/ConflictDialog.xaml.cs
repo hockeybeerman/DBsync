@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using DBsync.Tray.Notifications;
 using DBsync.Tray.ViewModels;
 
 namespace DBsync.Tray.Views;
@@ -18,7 +19,7 @@ public partial class ConflictDialog : Window
 
         DataContext = conflict;
         conflict.Finished += OnFinished;
-        conflict.Resolved += (title, body) => Resolved?.Invoke(title, body);
+        conflict.Resolved += message => Resolved?.Invoke(message);
 
         if (owner is not null)
         {
@@ -38,8 +39,8 @@ public partial class ConflictDialog : Window
         Loaded += (_, _) => PlayEntry();
     }
 
-    /// <summary>Fires with the toast copy for each resolution; #6 will show them.</summary>
-    public event Action<string, string>? Resolved;
+    /// <summary>Fires with the toast to show for each resolution.</summary>
+    public event Action<ToastMessage>? Resolved;
 
     public void ShowWithBackdrop()
     {

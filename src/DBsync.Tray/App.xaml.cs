@@ -2,6 +2,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using DBsync.Tray.Dev;
+using DBsync.Tray.Notifications;
 using DBsync.Tray.Services;
 using DBsync.Tray.Theming;
 using DBsync.Tray.Tray;
@@ -20,6 +21,8 @@ public partial class App : Application
     private WizardWindow? _wizard;
     private ActivityWindow? _activity;
     private ConflictDialog? _conflict;
+    private ToastService? _toasts;
+    private ToastStack? _toastStack;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -71,6 +74,16 @@ public partial class App : Application
         _flyout.PairActivated += OnPairActivated;
         _flyout.NavigationRequested += OnNavigationRequested;
 
+        // Toasts before the tray icon, so a notification raised during the first state push has
+        // somewhere to go.
+        _toastStack = new ToastStack(() => _flyout is { IsVisible: true } ? _flyout.ActualHeight : 0);
+        _toastStack.Clicked += message => OnToastActivated(message.Kind);
+
+        _toasts = new ToastService(message => _toastStack.Show(message));
+        _toasts.Activated += OnToastActivated;
+
+        _shell.ToastRequested += message => _toasts.Show(message);
+
         _tray = new TrayIconHost(_shell, _theme!.Windows);
         _tray.ToggleRequested += () => _flyout.ToggleFlyout();
         _tray.OpenRequested += () => _flyout.ShowFlyout();
@@ -118,6 +131,28 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// A clicked toast opens whatever it was about. Anything with no obvious destination brings
+    /// the flyout up, which is the app's front door.
+    /// </summary>
+    private void OnToastActivated(ToastKind kind)
+    {
+        switch (kind)
+        {
+            case ToastKind.ConflictRaised:
+            case ToastKind.ConflictResolved:
+            case ToastKind.BothCopiesKept:
+                ShowConflicts();
+                break;
+            case ToastKind.PairCreated:
+            case ToastKind.Paused:
+            case ToastKind.Resumed:
+            default:
+                _flyout?.ShowFlyout();
+                break;
+        }
+    }
+
+    /// <summary>
     /// Opens the conflict dialog on the open conflicts, optionally scoped to one pair. Closes
     /// itself once there is nothing left to decide.
     /// </summary>
@@ -133,25 +168,12 @@ public partial class App : Application
 
         var viewModel = new ConflictViewModel(_connection!);
         _conflict = new ConflictDialog(viewModel, owner);
-        _conflict.Resolved += (title, body) => ReportToast(title, body);
+        _conflict.Resolved += message => _toasts?.Show(message);
         _conflict.Closed += (_, _) => _conflict = null;
         _conflict.ShowWithBackdrop();
 
         _ = viewModel.LoadAsync(pairId);
     }
-
-    /// <summary>
-    /// Stands in for the Windows toast #6 will raise. The copy is already the design's, so this
-    /// swaps for a real ToastNotification without touching the callers.
-    /// <para>
-    /// Posted rather than shown inline: a toast does not block, and this is raised from the middle
-    /// of the conflict dialog's resolve loop — a modal here would stall it between files.
-    /// </para>
-    /// </summary>
-    private void ReportToast(string title, string body) =>
-        Dispatcher.BeginInvoke(new Action(() =>
-            MessageBox.Show(body, title, MessageBoxButton.OK, MessageBoxImage.Information)),
-            System.Windows.Threading.DispatcherPriority.Background);
 
     /// <summary>
     /// Opens the activity window, optionally scoped to one pair. Only one is kept, so repeated
@@ -197,7 +219,12 @@ public partial class App : Application
 
         var viewModel = new WizardViewModel(_connection!, UserSettings.Current, editing);
         _wizard = new WizardWindow(viewModel);
-        _wizard.Completed += _ => _wizard = null;
+        _wizard.Completed += saved =>
+        {
+            _wizard = null;
+            if (saved is not null && editing is null)
+                _toasts?.Show(ToastCopy.PairCreated(saved.LocalPath, saved.SharePath));
+        };
         _wizard.Closed += (_, _) => _wizard = null;
         _wizard.Show();
         _wizard.Activate();
@@ -250,6 +277,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _toastStack?.CloseAll();
+        _toasts?.Dispose();
         _tray?.Dispose();
         _connection?.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(2));
         _theme?.Dispose();

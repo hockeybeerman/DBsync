@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
+using DBsync.Tray.Notifications;
 using DBsync.Tray.Services;
 using DBsync.Tray.Theming;
 
@@ -27,6 +28,7 @@ public sealed class ShellViewModel : ObservableObject
         _connection.StateReplaced += OnStateReplaced;
         _connection.PairChanged += OnPairChanged;
         _connection.ConnectionChanged += OnConnectionChanged;
+        _connection.ConflictRaised += OnConflictRaised;
 
         _theme.PropertyChanged += (_, e) =>
         {
@@ -39,6 +41,9 @@ public sealed class ShellViewModel : ObservableObject
         SetDarkCommand = new RelayCommand(() => SetAppearance(AppearanceMode.Dark));
         SetMatchWindowsCommand = new RelayCommand(() => SetAppearance(AppearanceMode.MatchWindows));
     }
+
+    /// <summary>Raised when something the user did deserves a notification.</summary>
+    public event Action<ToastMessage>? ToastRequested;
 
     public ObservableCollection<PairViewModel> Pairs { get; } = new();
 
@@ -192,6 +197,16 @@ public sealed class ShellViewModel : ObservableObject
         });
     }
 
+    /// <summary>
+    /// A conflict stops a pair syncing and needs a person, so it is worth interrupting for — even
+    /// though the design's table does not list a toast for it.
+    /// </summary>
+    private void OnConflictRaised(ConflictRaisedEvent raised)
+    {
+        var file = System.IO.Path.GetFileName(raised.Conflict.RelativePath);
+        ToastRequested?.Invoke(ToastCopy.ConflictRaised(file, raised.Conflict.PairName));
+    }
+
     private void OnConnectionChanged(bool connected)
     {
         IsConnected = connected;
@@ -210,7 +225,18 @@ public sealed class ShellViewModel : ObservableObject
         // for the round trip makes the button feel dead on a busy service.
         PausedAll = pausing;
 
-        _ = _connection.TryAsync(client =>
-            pausing ? client.PauseAllAsync() : client.ResumeAllAsync());
+        _ = _connection.TryAsync(async client =>
+        {
+            var state = pausing
+                ? await client.PauseAllAsync().ConfigureAwait(false)
+                : await client.ResumeAllAsync().ConfigureAwait(false);
+
+            // The resume copy names how much is queued, which only the service knows — so the
+            // toast waits for the response rather than guessing alongside the optimistic flip.
+            await _dispatcher.BeginInvoke(() => ToastRequested?.Invoke(
+                pausing ? ToastCopy.Paused() : ToastCopy.Resumed(state.QueuedChanges)));
+
+            return true;
+        });
     }
 }

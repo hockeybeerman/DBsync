@@ -82,6 +82,7 @@ public sealed class SyncEngine : IAsyncDisposable
             StatusLine = StatusText.HeaderLine(config.PausedAll, StatusText.AttentionCount(pairs)),
             AnySyncing = !config.PausedAll && pairs.Any(pair => pair.Status == PairStatus.Syncing),
             ServiceVersion = Version,
+            QueuedChanges = _workers.Values.Sum(worker => worker.PendingChanges),
         };
     }
 
@@ -183,12 +184,18 @@ public sealed class SyncEngine : IAsyncDisposable
 
     public ServiceState SetGlobalPause(bool paused)
     {
+        // Read the backlog before releasing the workers. A moment later they are draining it, and
+        // the number the user is told about would be whatever happened to survive the first few
+        // milliseconds rather than what was actually waiting.
+        var queuedBeforeResume = paused ? 0 : _workers.Values.Sum(worker => worker.PendingChanges);
+
         _config.Update(current => current.PausedAll = paused);
         foreach (var worker in _workers.Values) worker.SetGlobalPause(paused);
 
         _log.LogInformation(paused ? "All syncing paused." : "Syncing resumed.");
 
         var state = GetState();
+        if (!paused) state.QueuedChanges = queuedBeforeResume;
         Publish(IpcEventKind.StateChanged, state);
         return state;
     }

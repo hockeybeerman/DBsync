@@ -19,6 +19,12 @@ public sealed class ServiceState
 
     /// <summary>Service build version, so the tray app can warn on a protocol mismatch.</summary>
     public string ServiceVersion { get; set; } = "";
+
+    /// <summary>
+    /// Paths waiting to be reconciled across every pair. Backs the resume toast's "Catching up on
+    /// N queued changes" — without it that number would have to be invented.
+    /// </summary>
+    public int QueuedChanges { get; set; }
 }
 
 /// <summary>One row of the activity &amp; history table.</summary>

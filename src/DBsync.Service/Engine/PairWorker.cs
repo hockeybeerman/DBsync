@@ -66,6 +66,12 @@ public sealed class PairWorker : IAsyncDisposable
     /// </summary>
     private bool _settled;
 
+    /// <summary>
+    /// Paths waiting to be reconciled. The dirty set itself belongs to the loop thread, so this
+    /// mirrors its size for readers on other threads rather than exposing the collection.
+    /// </summary>
+    private volatile int _pending;
+
     public PairWorker(
         FolderPair settings,
         ServiceConfig config,
@@ -87,6 +93,14 @@ public sealed class PairWorker : IAsyncDisposable
     }
 
     public string PairId => _settings.Id;
+
+    /// <summary>
+    /// Reconciles still owed. Three places hold work at different stages, and while the pair is
+    /// paused almost all of it sits in the channel — counting only the dirty set would report
+    /// nothing queued at exactly the moment the user asks.
+    /// </summary>
+    public int PendingChanges =>
+        _pending + _queue.PendingCount + (_work.Reader.CanCount ? _work.Reader.Count : 0);
 
     /// <summary>Raised whenever the row's status, percent, or detail line moves.</summary>
     public event Action<PairWorker>? Changed;
@@ -227,6 +241,7 @@ public sealed class PairWorker : IAsyncDisposable
                 {
                     _fullScanRequested = false;
                     EnumerateInto(_dirty);
+                    _pending = _dirty.Count;
                 }
 
                 if (_dirty.Count > 0) await ProcessBatchAsync(ct).ConfigureAwait(false);
@@ -264,6 +279,7 @@ public sealed class PairWorker : IAsyncDisposable
         {
             case WorkKind.Reconcile when item.RelativePath is { Length: > 0 } path:
                 _dirty.Add(path);
+                _pending = _dirty.Count;
                 break;
             case WorkKind.FullScan:
                 _fullScanRequested = true;
@@ -420,6 +436,7 @@ public sealed class PairWorker : IAsyncDisposable
             }
 
             _dirty.Remove(relativePath);
+            _pending = _dirty.Count;
             _batchDone++;
             _percent = (int)(_batchDone * 100L / Math.Max(1, _batchTotal));
         }

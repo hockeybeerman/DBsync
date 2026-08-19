@@ -1,6 +1,7 @@
 using System.IO;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
+using DBsync.Tray.Notifications;
 using DBsync.Tray.Services;
 
 namespace DBsync.Tray.ViewModels;
@@ -45,8 +46,8 @@ public sealed class ConflictViewModel : ObservableObject
     /// <summary>Raised when there is nothing left to decide and the dialog should close.</summary>
     public event Action? Finished;
 
-    /// <summary>Raised after each resolution, with copy for the toast #6 will show.</summary>
-    public event Action<string, string>? Resolved;
+    /// <summary>Raised after each resolution, with the toast to show for it.</summary>
+    public event Action<ToastMessage>? Resolved;
 
     public bool HasConflict => _current is not null;
 
@@ -188,12 +189,14 @@ public sealed class ConflictViewModel : ObservableObject
 
             if (ack is null)
             {
-                Resolved?.Invoke("Could not resolve",
-                    "The DBsync service is not responding, so nothing was changed.");
+                // Not in the design's table, but silence here would read as success on the one
+                // action in the app that can lose a file.
+                Resolved?.Invoke(new ToastMessage(ToastKind.ConflictResolved, "Could not resolve",
+                    "The DBsync service is not responding, so nothing was changed."));
                 return;
             }
 
-            Resolved?.Invoke(ToastTitle(resolution), ToastBody(resolution, conflict));
+            Resolved?.Invoke(ToastFor(resolution, conflict));
 
             // The service resolved the rest of this pair itself; dropping them here keeps the
             // queue honest rather than asking about files that are already decided.
@@ -214,20 +217,13 @@ public sealed class ConflictViewModel : ObservableObject
         foreach (var conflict in survivors) _queue.Enqueue(conflict);
     }
 
-    private static string ToastTitle(ConflictResolution resolution) =>
-        resolution == ConflictResolution.KeepBoth ? "Both copies kept" : "Conflict resolved";
-
-    /// <summary>Toast copy, verbatim from the design's table.</summary>
-    private static string ToastBody(ConflictResolution resolution, ConflictRecord conflict)
+    private static ToastMessage ToastFor(ConflictResolution resolution, ConflictRecord conflict)
     {
         var file = Path.GetFileName(conflict.RelativePath);
 
-        return resolution switch
-        {
-            ConflictResolution.KeepLocal => $"The copy on this PC of {file} was kept.",
-            ConflictResolution.KeepShare => $"The network copy of {file} was kept.",
-            _ => $"Saved as {KeepBothName(file)} alongside the original.",
-        };
+        return resolution == ConflictResolution.KeepBoth
+            ? ToastCopy.BothCopiesKept(KeepBothName(file))
+            : ToastCopy.ConflictResolved(resolution == ConflictResolution.KeepLocal, file);
     }
 
     /// <summary>
