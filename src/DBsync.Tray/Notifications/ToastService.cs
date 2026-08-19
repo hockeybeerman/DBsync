@@ -1,4 +1,5 @@
 using System.Windows;
+using DBsync.Tray.Services;
 using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace DBsync.Tray.Notifications;
@@ -32,6 +33,9 @@ public sealed class ToastService : IDisposable
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
             _subscribed = true;
             _shellToastsWork = ShellWillDisplayToasts();
+
+            Diagnostics.Note($"toast service ready; shell will display = {_shellToastsWork}; " +
+                             $"was launched by a toast = {ToastNotificationManagerCompat.WasCurrentProcessToastActivated()}");
         }
         catch (Exception)
         {
@@ -97,6 +101,7 @@ public sealed class ToastService : IDisposable
                 .AddText(message.Body)
                 .Show();
 
+            Diagnostics.Note($"shell toast sent: {message.Kind}");
             return true;
         }
         catch (Exception)
@@ -110,9 +115,20 @@ public sealed class ToastService : IDisposable
 
     private void OnToastActivated(ToastNotificationActivatedEventArgsCompat args)
     {
+        Diagnostics.Note($"toast activated, argument='{args.Argument}'");
+
         var arguments = ToastArguments.Parse(args.Argument);
-        if (!arguments.TryGetValue("kind", out var raw)) return;
-        if (!Enum.TryParse<ToastKind>(raw, out var kind)) return;
+        if (!arguments.TryGetValue("kind", out var raw))
+        {
+            Diagnostics.Note("activation carried no 'kind' argument");
+            return;
+        }
+
+        if (!Enum.TryParse<ToastKind>(raw, out var kind))
+        {
+            Diagnostics.Note($"activation kind '{raw}' not recognised");
+            return;
+        }
 
         Application.Current?.Dispatcher.BeginInvoke(new Action(() => Activated?.Invoke(kind)));
     }

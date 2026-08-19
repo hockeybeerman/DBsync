@@ -14,6 +14,8 @@
     <Version>1.0.0</Version>
     <Product>DBsync</Product>
     <Description>DBsync tray application.</Description>
+    <!-- Windows attributes an unpackaged app's toasts to this, not the assembly name. -->
+    <AssemblyTitle>DBsync</AssemblyTitle>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
@@ -46,4 +48,5 @@
   </ItemGroup>
 
 </Project>
+
 

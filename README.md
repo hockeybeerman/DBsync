@@ -240,6 +240,17 @@ turning notifications back on takes effect immediately.
 The service snapshots the backlog *before* releasing the workers — a moment later they are draining
 it — and counts all three places work sits, since while paused nearly all of it is in the channel.
 
+**Do Not Disturb is deliberately not worked around.** `ToastNotifier.Setting` reports notifications
+as enabled while DND or a focus session is active, so toasts go quietly to the notification centre
+and no in-app card appears. That is the intended behaviour: DND is the user asking not to be
+interrupted, and substituting our own window would defeat the choice they just made. Nothing is
+lost — the centre keeps them, and the flyout already reflects pause, resume and conflict state on
+its own.
+
+The app is attributed in toasts by its AUMID display name, which comes from `AssemblyTitle`.
+Windows caches that per AUMID on first registration, so changing it only takes effect for a
+build at a new path — worth knowing if a toast ever shows the wrong name during development.
+
 ### Theming
 
 The Nocturne token set as WPF resource dictionaries, plus Light / Dark / Match Windows switching
