@@ -48,6 +48,9 @@ public sealed class ServiceConnection : IAsyncDisposable
     /// <summary>A conflict was parked and needs a decision.</summary>
     public event Action<ConflictRaisedEvent>? ConflictRaised;
 
+    /// <summary>A destination went offline or came back, and why.</summary>
+    public event Action<ReachabilityEvent>? ReachabilityChanged;
+
     public bool IsConnected => _client?.IsConnected == true;
 
     /// <summary>
@@ -174,6 +177,11 @@ public sealed class ServiceConnection : IAsyncDisposable
             case IpcEventKind.ConflictRaised:
                 var raised = message.PayloadAs<ConflictRaisedEvent>();
                 Post(() => ConflictRaised?.Invoke(raised));
+                break;
+
+            case IpcEventKind.ReachabilityChanged:
+                var reach = message.PayloadAs<ReachabilityEvent>();
+                Post(() => ReachabilityChanged?.Invoke(reach));
                 break;
         }
     }

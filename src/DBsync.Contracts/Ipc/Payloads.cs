@@ -106,6 +106,15 @@ public sealed class ReachabilityEvent
     public string PairId { get; set; } = "";
     public bool Reachable { get; set; }
     public string Detail { get; set; } = "";
+
+    /// <summary>
+    /// The destination refused the stored credentials rather than being absent. Retrying will not
+    /// help, so a client should ask for a new sign-in instead of waiting.
+    /// </summary>
+    public bool NeedsCredentials { get; set; }
+
+    /// <summary>Pair name, so a notification can name it without a second lookup.</summary>
+    public string PairName { get; set; } = "";
 }
 
 public sealed class LogAppendedEvent

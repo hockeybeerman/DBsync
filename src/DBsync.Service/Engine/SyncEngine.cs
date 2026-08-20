@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
@@ -79,7 +79,8 @@ public sealed class SyncEngine : IAsyncDisposable
         {
             Pairs = pairs,
             PausedAll = config.PausedAll,
-            StatusLine = StatusText.HeaderLine(config.PausedAll, StatusText.AttentionCount(pairs)),
+            StatusLine = StatusText.HeaderLine(config.PausedAll, StatusText.AttentionCount(pairs),
+                StatusText.SignInCount(pairs)),
             AnySyncing = !config.PausedAll && pairs.Any(pair => pair.Status == PairStatus.Syncing),
             ServiceVersion = Version,
             QueuedChanges = _workers.Values.Sum(worker => worker.PendingChanges),
@@ -326,8 +327,13 @@ public sealed class SyncEngine : IAsyncDisposable
             });
         }
 
-        // Force a reconnect so the new credentials take effect without a service restart.
-        if (_workers.TryGetValue(request.PairId, out var worker)) worker.RequestFullScan();
+        // Drop the authenticated session and retry now, so new credentials take effect without
+        // a service restart and without waiting out the rejected-sign-in interval.
+        if (_workers.TryGetValue(request.PairId, out var worker))
+        {
+            worker.CredentialsChanged();
+            Publish(IpcEventKind.StateChanged, GetState());
+        }
     }
 
     // ---- Wiring -------------------------------------------------------------
@@ -361,9 +367,19 @@ public sealed class SyncEngine : IAsyncDisposable
         Publish(IpcEventKind.ConflictRaised,
             new ConflictRaisedEvent { Conflict = conflict, PendingInPair = pendingInPair });
 
-    private void OnReachabilityChanged(PairWorker worker, bool reachable, string detail) =>
-        Publish(IpcEventKind.ReachabilityChanged,
-            new ReachabilityEvent { PairId = worker.PairId, Reachable = reachable, Detail = detail });
+    private void OnReachabilityChanged(PairWorker worker, bool reachable, string detail)
+    {
+        var pair = worker.Snapshot();
+
+        Publish(IpcEventKind.ReachabilityChanged, new ReachabilityEvent
+        {
+            PairId = worker.PairId,
+            PairName = pair.Name,
+            Reachable = reachable,
+            Detail = detail,
+            NeedsCredentials = pair.NeedsCredentials,
+        });
+    }
 
     private void Publish(IpcEventKind kind, object payload)
     {

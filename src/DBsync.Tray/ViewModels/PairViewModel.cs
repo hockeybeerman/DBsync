@@ -19,6 +19,7 @@ public sealed class PairViewModel : ObservableObject
     private string _detail = "";
     private PairStatus _status;
     private int _percent;
+    private bool _needsCredentials;
 
     public PairViewModel(FolderPair pair) => Apply(pair);
 
@@ -94,6 +95,16 @@ public sealed class PairViewModel : ObservableObject
         _ => Icons.IconKey.Pause,
     };
 
+    /// <summary>
+    /// The share refused the stored sign-in. Kept separate from Status, which stays Waiting: the
+    /// design's five statuses are a closed set, and this is a reason rather than a sixth state.
+    /// </summary>
+    public bool NeedsCredentials
+    {
+        get => _needsCredentials;
+        private set => Set(ref _needsCredentials, value);
+    }
+
     /// <summary>Line 4 exists only while syncing.</summary>
     public bool ShowProgress => Status == PairStatus.Syncing;
 
@@ -109,5 +120,6 @@ public sealed class PairViewModel : ObservableObject
         Detail = pair.Detail;
         Status = pair.Status;
         Percent = pair.Percent;
+        NeedsCredentials = pair.NeedsCredentials;
     }
 }

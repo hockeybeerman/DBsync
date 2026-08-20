@@ -57,6 +57,12 @@ public sealed class FolderPair
     /// <summary>Unresolved conflicts parked for this pair.</summary>
     public int PendingConflicts { get; set; }
 
+    /// <summary>
+    /// The share rejected the stored credentials. Distinct from simply being unreachable: no
+    /// amount of retrying fixes it, and the user has to supply a working sign-in.
+    /// </summary>
+    public bool NeedsCredentials { get; set; }
+
     /// <summary>Returns a copy carrying only the persisted settings.</summary>
     public FolderPair CloneSettings() => new()
     {

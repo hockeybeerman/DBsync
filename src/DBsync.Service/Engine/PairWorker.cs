@@ -1,4 +1,4 @@
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 using DBsync.Contracts;
 using DBsync.Service.Configuration;
 using DBsync.Service.Storage;
@@ -48,6 +48,7 @@ public sealed class PairWorker : IAsyncDisposable
     private bool _fullScanRequested = true;
     private bool _globalPause;
     private bool _reachable = true;
+    private bool _needsCredentials;
     private int _retryIndex;
     private DateTimeOffset _retryAt;
 
@@ -119,6 +120,7 @@ public sealed class PairWorker : IAsyncDisposable
         lock (_settingsGate) projection = _settings.CloneSettings();
 
         projection.PendingConflicts = _pendingConflicts;
+        projection.NeedsCredentials = _needsCredentials;
         projection.Status = EffectiveStatus();
         projection.Percent = projection.Status == PairStatus.Syncing ? _percent : 0;
         projection.Detail = DescribeDetail(projection.Status);
@@ -143,6 +145,28 @@ public sealed class PairWorker : IAsyncDisposable
     {
         _fullScanRequested = true;
         _work.Writer.TryWrite(WorkItem.Wake);
+    }
+
+    /// <summary>
+    /// New credentials have been filed. Drops the authenticated session so the next attempt
+    /// uses them, clears the block, and tries again now rather than in half an hour.
+    /// </summary>
+    public void CredentialsChanged()
+    {
+        _connection?.Dispose();
+        _connection = null;
+
+        // The worker runs off its own snapshot of the pair, so filing a credential in the store is
+        // not enough: without this, EnsureConnection keeps skipping the sign-in it was just given
+        // and the retry below fails exactly as before, until the service restarts.
+        lock (_settingsGate) _settings.SaveCredentials = true;
+
+        _needsCredentials = false;
+        _retryIndex = 0;
+        _retryAt = DateTimeOffset.UtcNow;
+
+        RequestFullScan();
+        Changed?.Invoke(this);
     }
 
     public void SetGlobalPause(bool paused)
@@ -309,7 +333,7 @@ public sealed class PairWorker : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                SetUnreachable($"Local folder unavailable — {ex.Message}");
+                SetUnreachable($"Local folder unavailable — {ex.Message}", needsCredentials: false);
                 return false;
             }
         }
@@ -318,25 +342,34 @@ public sealed class PairWorker : IAsyncDisposable
         {
             EnsureConnection(settings);
         }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            // The share answered and refused us. Retrying cannot fix a rejected password, and
+            // hammering one is how accounts get locked out.
+            SetUnreachable(ex.Message, IsAuthenticationFailure(ex.NativeErrorCode));
+            return false;
+        }
         catch (Exception ex)
         {
-            SetUnreachable(ex.Message);
+            SetUnreachable(ex.Message, needsCredentials: false);
             return false;
         }
 
-        if (!Directory.Exists(settings.SharePath))
+        var probe = ProbeShare(settings.SharePath);
+        if (probe is not null)
         {
             // A share that vanished mid-session may just be a dropped session; drop the
             // connection so the next attempt re-authenticates from scratch.
             _connection?.Dispose();
             _connection = null;
-            SetUnreachable(StatusText.UnreachableNow());
+            SetUnreachable(probe.Value.Message, probe.Value.NeedsCredentials);
             return false;
         }
 
         if (!_reachable)
         {
             _reachable = true;
+            _needsCredentials = false;
             _retryIndex = 0;
             _transientDetail = null;
             _log.LogInformation("Pair {Name}: destination is reachable again.", settings.Name);
@@ -349,6 +382,49 @@ public sealed class PairWorker : IAsyncDisposable
         return true;
     }
 
+    /// <summary>
+    /// Looks at the share and reports why it could not be used, or null when it is fine.
+    /// <para>
+    /// Directory.Exists is not enough here: it flattens "no such server", "wrong password" and
+    /// "you have no rights to this folder" into the same false, and those need completely
+    /// different things from the user.
+    /// </para>
+    /// </summary>
+    private static (string Message, bool NeedsCredentials)? ProbeShare(string sharePath)
+    {
+        try
+        {
+            Directory.EnumerateFileSystemEntries(sharePath).GetEnumerator().MoveNext();
+            return null;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return (ex.Message, true);
+        }
+        catch (IOException ex) when (IsAuthenticationFailure(ex.HResult & 0xFFFF))
+        {
+            return (ex.Message, true);
+        }
+        catch (Exception ex)
+        {
+            return (ex.Message, false);
+        }
+    }
+
+    /// <summary>
+    /// Win32 codes meaning "the share is there and said no", rather than "the share is not
+    /// there". Only these justify asking the user to sign in again.
+    /// </summary>
+    private static bool IsAuthenticationFailure(int code) => code is
+        5 or        // ERROR_ACCESS_DENIED
+        86 or       // ERROR_INVALID_PASSWORD
+        1326 or     // ERROR_LOGON_FAILURE
+        1327 or     // ERROR_ACCOUNT_RESTRICTION
+        1330 or     // ERROR_PASSWORD_EXPIRED
+        1331 or     // ERROR_ACCOUNT_DISABLED
+        1793 or     // ERROR_ACCOUNT_EXPIRED
+        1907;       // ERROR_PASSWORD_MUST_CHANGE
+
     private void EnsureConnection(FolderPair settings)
     {
         if (_connection is not null) return;
@@ -360,21 +436,48 @@ public sealed class PairWorker : IAsyncDisposable
         _connection = NetworkConnection.Attach(settings.SharePath, credentials);
     }
 
-    private void SetUnreachable(string message)
+    /// <summary>How long to wait between attempts once a sign-in has been refused.</summary>
+    private static readonly TimeSpan CredentialRetryInterval = TimeSpan.FromMinutes(30);
+
+    private void SetUnreachable(string message, bool needsCredentials)
     {
         var wasReachable = _reachable;
+        var wasNeedingCredentials = _needsCredentials;
+
         _reachable = false;
 
-        var ladder = _config.RetrySecondsLadder;
-        var seconds = ladder[Math.Min(_retryIndex, ladder.Count - 1)];
-        _retryAt = DateTimeOffset.UtcNow.AddSeconds(seconds);
+        // A refusal is sticky. Once the share has told us the sign-in is wrong, a later generic
+        // failure is not evidence it became right: letting it clear the flag would retract the
+        // prompt the user needs and put us back on the climbing ladder against a server that is
+        // rejecting us. Only reaching the share, or being given new credentials, clears it.
+        _needsCredentials = needsCredentials || _needsCredentials;
+        needsCredentials = _needsCredentials;
+
+        if (needsCredentials)
+        {
+            // One attempt every half hour, not a climbing ladder. Enough to notice if the
+            // account is fixed elsewhere; rare enough that it cannot trip a lockout policy.
+            _retryAt = DateTimeOffset.UtcNow.Add(CredentialRetryInterval);
+        }
+        else
+        {
+            var ladder = _config.RetrySecondsLadder;
+            var seconds = ladder[Math.Min(_retryIndex, ladder.Count - 1)];
+            _retryAt = DateTimeOffset.UtcNow.AddSeconds(seconds);
+        }
+
         _transientDetail = null; // recomputed from _retryAt so the countdown stays live
 
-        if (wasReachable)
+        // Announce the first failure, and again if a plain outage turns out to be a rejected
+        // sign-in — that is a different problem needing a different action.
+        if (wasReachable || needsCredentials != wasNeedingCredentials)
         {
-            _log.LogWarning("Pair {Name}: destination unreachable — {Message}", _settings.Name, message);
+            _log.LogWarning("Pair {Name}: {Kind} — {Message}", _settings.Name,
+                needsCredentials ? "credentials rejected" : "destination unreachable", message);
+
             _activity.Append(_settings.Id, _settings.Name, ActivityEventKind.Retry,
                 _settings.SharePath, ActivityResult.Offline, message: message);
+
             ReachabilityChanged?.Invoke(this, false, message);
         }
 
@@ -383,18 +486,21 @@ public sealed class PairWorker : IAsyncDisposable
 
     private async Task BackoffAsync(CancellationToken ct)
     {
-        var remaining = _retryAt - DateTimeOffset.UtcNow;
-        if (remaining < TimeSpan.Zero) remaining = TimeSpan.FromSeconds(1);
-
-        // Wake once a second so the "retrying in Ns" countdown on the row stays truthful.
-        var deadline = DateTimeOffset.UtcNow + remaining;
-        while (DateTimeOffset.UtcNow < deadline && !ct.IsCancellationRequested)
+        // Wake once a second so the "retrying in Ns" countdown on the row stays truthful, and
+        // re-read _retryAt every tick rather than committing to a deadline up front. New
+        // credentials move _retryAt to now; a worker still sleeping on a snapshot taken when the
+        // sign-in was refused would ignore them for the rest of that half-hour wait, all while the
+        // row showed a one-second countdown that never fired.
+        do
         {
             await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
             Changed?.Invoke(this);
         }
+        while (DateTimeOffset.UtcNow < _retryAt && !ct.IsCancellationRequested);
 
-        _retryIndex = Math.Min(_retryIndex + 1, _config.RetrySecondsLadder.Count - 1);
+        // The ladder is for outages. A rejected sign-in stays on its own fixed interval.
+        if (!_needsCredentials)
+            _retryIndex = Math.Min(_retryIndex + 1, _config.RetrySecondsLadder.Count - 1);
     }
 
     // ---- Batch processing ---------------------------------------------------
@@ -919,6 +1025,7 @@ public sealed class PairWorker : IAsyncDisposable
     private string DescribeDetail(PairStatus status) => status switch
     {
         PairStatus.Paused => StatusText.Paused,
+        PairStatus.Waiting when _needsCredentials => StatusText.SignInNeeded(),
         PairStatus.Waiting => StatusText.Unreachable((int)Math.Ceiling((_retryAt - DateTimeOffset.UtcNow).TotalSeconds)),
         PairStatus.Conflict => StatusText.Conflicts(_pendingConflicts),
         PairStatus.Syncing when !_settled && _transientDetail is null => StatusText.StartingUp,

@@ -23,6 +23,7 @@ public partial class App : Application
     private ConflictDialog? _conflict;
     private ToastService? _toasts;
     private ToastStack? _toastStack;
+    private CredentialsDialog? _credentials;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -108,6 +109,13 @@ public partial class App : Application
             return;
         }
 
+        // A refused sign-in is the one thing the user can fix from the row itself.
+        if (pair.NeedsCredentials)
+        {
+            ShowCredentials(pair.Id);
+            return;
+        }
+
         // The prototype opens the activity window for a non-conflict row as scaffolding; the real
         // target is that pair's detail view, which is #9. Until then, show its history filtered to
         // it, which is at least about the row that was clicked.
@@ -143,6 +151,9 @@ public partial class App : Application
             case ToastKind.BothCopiesKept:
                 ShowConflicts();
                 break;
+            case ToastKind.CredentialsNeeded:
+                ShowCredentials();
+                break;
             case ToastKind.PairCreated:
             case ToastKind.Paused:
             case ToastKind.Resumed:
@@ -150,6 +161,46 @@ public partial class App : Application
                 _flyout?.ShowFlyout();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Opens the sign-in re-prompt for a pair whose credentials were refused. With no id, picks
+    /// the first pair asking for one — which is what a toast click means.
+    /// </summary>
+    private void ShowCredentials(string? pairId = null)
+    {
+        if (_credentials is not null)
+        {
+            _credentials.Activate();
+            return;
+        }
+
+        _ = ShowCredentialsAsync(pairId);
+    }
+
+    private async Task ShowCredentialsAsync(string? pairId)
+    {
+        // Fetch the pair fresh rather than using the row's projection: the dialog needs the share
+        // path and name as the service currently has them.
+        var state = await _connection!.TryAsync(client => client.GetStateAsync());
+        var pair = pairId is null
+            ? state?.Pairs.FirstOrDefault(candidate => candidate.NeedsCredentials)
+            : state?.Pairs.FirstOrDefault(candidate => candidate.Id == pairId);
+
+        if (pair is null)
+        {
+            ReportUnbuilt("That folder pair is no longer asking for a sign-in.");
+            return;
+        }
+
+        _flyout?.HideFlyout();
+
+        var viewModel = new CredentialsViewModel(_connection!, pair);
+        _credentials = new CredentialsDialog(viewModel);
+        _credentials.Completed += toast => { if (toast is not null) _toasts?.Show(toast); };
+        _credentials.Closed += (_, _) => _credentials = null;
+        _credentials.Show();
+        _credentials.Activate();
     }
 
     /// <summary>

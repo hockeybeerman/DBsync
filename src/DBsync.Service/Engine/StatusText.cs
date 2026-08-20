@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using DBsync.Contracts;
 
 namespace DBsync.Service.Engine;
@@ -36,14 +36,33 @@ public static class StatusText
 
     public static string UnreachableNow() => "Share unreachable — reconnecting";
 
+    /// <summary>
+    /// Not in the design, which has no copy for a rejected sign-in. Deliberately does not mention
+    /// retrying: retrying is exactly what will not help here.
+    /// </summary>
+    public static string SignInNeeded() => "Sign-in needed — the saved credentials were rejected";
+
     /// <summary>Header line above the pair list.</summary>
-    public static string HeaderLine(bool pausedAll, int attentionCount)
+    /// <param name="signInCount">
+    /// Pairs whose sign-in was refused. The design's header counts files, and a rejected sign-in
+    /// is not a file — but reporting "Everything in sync" over a pair that has stopped dead is the
+    /// one thing the header must never do, so it gets its own wording rather than being folded
+    /// into the file count.
+    /// </param>
+    public static string HeaderLine(bool pausedAll, int attentionCount, int signInCount = 0)
     {
         if (pausedAll) return "All syncing paused";
-        if (attentionCount == 0) return "Everything in sync";
-        return attentionCount == 1
-            ? "1 file needs your attention"
-            : $"{attentionCount} files need your attention";
+        if (attentionCount > 0)
+            return attentionCount == 1
+                ? "1 file needs your attention"
+                : $"{attentionCount} files need your attention";
+
+        if (signInCount > 0)
+            return signInCount == 1
+                ? "1 folder pair needs a sign-in"
+                : $"{signInCount} folder pairs need a sign-in";
+
+        return "Everything in sync";
     }
 
     /// <summary>"just now", "2 minutes ago", "3 hours ago", "yesterday".</summary>
@@ -78,4 +97,8 @@ public static class StatusText
     /// <summary>Counts the rows the header's "needs your attention" number covers.</summary>
     public static int AttentionCount(IEnumerable<FolderPair> pairs) =>
         pairs.Sum(pair => pair.Status == PairStatus.Conflict ? Math.Max(1, pair.PendingConflicts) : 0);
+
+    /// <summary>Pairs stopped because the share refused their stored sign-in.</summary>
+    public static int SignInCount(IEnumerable<FolderPair> pairs) =>
+        pairs.Count(pair => pair.NeedsCredentials);
 }

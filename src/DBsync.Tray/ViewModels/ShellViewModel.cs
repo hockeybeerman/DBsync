@@ -30,6 +30,7 @@ public sealed class ShellViewModel : ObservableObject
         _connection.PairChanged += OnPairChanged;
         _connection.ConnectionChanged += OnConnectionChanged;
         _connection.ConflictRaised += OnConflictRaised;
+        _connection.ReachabilityChanged += OnReachabilityChanged;
 
         _theme.PropertyChanged += (_, e) =>
         {
@@ -318,6 +319,18 @@ public sealed class ShellViewModel : ObservableObject
     {
         var file = System.IO.Path.GetFileName(raised.Conflict.RelativePath);
         ToastRequested?.Invoke(ToastCopy.ConflictRaised(file, raised.Conflict.PairName));
+    }
+
+    /// <summary>
+    /// A refused sign-in is worth interrupting for: unlike an outage it will never clear on its
+    /// own, and the flyout is usually closed when credentials expire.
+    /// </summary>
+    private void OnReachabilityChanged(ReachabilityEvent reachability)
+    {
+        if (!reachability.NeedsCredentials) return;
+
+        var name = reachability.PairName is { Length: > 0 } named ? named : "A folder pair";
+        ToastRequested?.Invoke(ToastCopy.CredentialsNeeded(name));
     }
 
     private void OnConnectionChanged(bool connected)

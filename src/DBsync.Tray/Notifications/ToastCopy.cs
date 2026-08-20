@@ -9,6 +9,9 @@ public enum ToastKind
     ConflictResolved,
     BothCopiesKept,
     ConflictRaised,
+
+    /// <summary>A share refused the stored sign-in.</summary>
+    CredentialsNeeded,
 }
 
 /// <summary>One notification, ready to render.</summary>
@@ -53,6 +56,18 @@ public static class ToastCopy
     public static ToastMessage BothCopiesKept(string renamedFileName) =>
         new(ToastKind.BothCopiesKept, "Both copies kept",
             $"Saved as {renamedFileName} alongside the original.");
+
+    /// <summary>
+    /// Not in the design's table. A rejected sign-in stops a pair dead and no amount of waiting
+    /// fixes it, so the user has to be told — an addition, not transcription.
+    /// </summary>
+    public static ToastMessage CredentialsNeeded(string pairName) =>
+        new(ToastKind.CredentialsNeeded, "Sign-in needed",
+            $"{pairName} cannot reach its share — the saved credentials were rejected.");
+
+    public static ToastMessage CredentialsSaved(string pairName) =>
+        new(ToastKind.CredentialsNeeded, "Credentials saved",
+            $"Trying {pairName} again with the new sign-in.");
 
     /// <summary>
     /// Not in the design's table. A conflict is the one thing that stops a pair syncing and needs
