@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Stops and unregisters the DBsync Windows service.
 
@@ -36,6 +36,19 @@ if ($existing) {
 } else {
     Write-Host 'Service is not installed.' -ForegroundColor Yellow
 }
+
+# The tray app is registered per-machine and runs in the user's session, so it outlives the
+# service unless it is taken down explicitly.
+Write-Host 'Removing the tray app ...' -ForegroundColor Cyan
+Get-Process -Name 'DBsync.Tray' -ErrorAction SilentlyContinue | Stop-Process -Force
+
+$runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+if (Get-ItemProperty -Path $runKey -Name $serviceName -ErrorAction SilentlyContinue) {
+    Remove-ItemProperty -Path $runKey -Name $serviceName
+}
+
+$shortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\DBsync.lnk'
+if (Test-Path $shortcut) { Remove-Item -Force $shortcut }
 
 if ($RemoveData) {
     $dataRoot = Join-Path $env:ProgramData 'DBsync'

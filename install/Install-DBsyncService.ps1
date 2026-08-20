@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds, publishes and registers the DBsync Windows service.
 
@@ -46,6 +46,12 @@ if (-not $SkipBuild) {
     dotnet publish (Join-Path $repoRoot 'src\DBsync.Cli\DBsync.Cli.csproj') `
         -c Release -o $InstallPath
     if ($LASTEXITCODE -ne 0) { throw 'Publishing the CLI failed.' }
+
+    # The tray app is the only way to actually use DBsync. Publishing the service without it
+    # leaves a machine that syncs correctly and offers the user no way to see or change anything.
+    dotnet publish (Join-Path $repoRoot 'src\DBsync.Tray\DBsync.Tray.csproj') `
+        -c Release -o $InstallPath
+    if ($LASTEXITCODE -ne 0) { throw 'Publishing the tray app failed.' }
 }
 
 $exe = Join-Path $InstallPath 'DBsync.Service.exe'
@@ -72,8 +78,35 @@ Write-Host 'Starting the service ...' -ForegroundColor Cyan
 Start-Service -Name $serviceName
 Get-Service -Name $serviceName | Format-Table -AutoSize
 
+$trayExe = Join-Path $InstallPath 'DBsync.Tray.exe'
+if (Test-Path $trayExe) {
+    Write-Host 'Registering the tray app ...' -ForegroundColor Cyan
+
+    # Per-machine, so the tray comes up for whoever logs in - the service is machine-wide and the
+    # UI that drives it should not be tied to the account that happened to run the installer.
+    $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+    New-ItemProperty -Path $runKey -Name $serviceName -Value "`"$trayExe`"" `
+        -PropertyType String -Force | Out-Null
+
+    $startMenu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $startMenu 'DBsync.lnk'))
+    $shortcut.TargetPath = $trayExe
+    $shortcut.WorkingDirectory = $InstallPath
+    $shortcut.Description = 'Keep local folders in sync with network shares.'
+    $shortcut.Save()
+
+    # Start it for the installing user now rather than making them log out and back in. The
+    # installer is elevated; the tray must not be, or every window it owns inherits that.
+    if (-not (Get-Process -Name 'DBsync.Tray' -ErrorAction SilentlyContinue)) {
+        & explorer.exe $trayExe
+    }
+}
+
 Write-Host ''
 Write-Host 'Installed. Next steps:' -ForegroundColor Green
+Write-Host '  The DBsync icon is in the notification area. Windows 11 hides new tray icons by'
+Write-Host '  default - click the ^ chevron, then drag DBsync onto the taskbar to pin it.'
+Write-Host ''
 Write-Host "  $InstallPath\dbsync.exe status"
 Write-Host "  $InstallPath\dbsync.exe add --local C:\Work --share \\server\share"
 Write-Host ''
