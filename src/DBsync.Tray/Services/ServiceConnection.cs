@@ -27,6 +27,10 @@ public sealed class ServiceConnection : IAsyncDisposable
     private Task? _loop;
     private int _retryIndex;
 
+    /// <summary>Completed to cut a backoff wait short when the user asks to retry now.</summary>
+    private TaskCompletionSource<bool> _retryNow =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public ServiceConnection() => _dispatcher = Application.Current.Dispatcher;
 
     /// <summary>A full state arrived — repaint everything.</summary>
@@ -46,7 +50,23 @@ public sealed class ServiceConnection : IAsyncDisposable
 
     public bool IsConnected => _client?.IsConnected == true;
 
+    /// <summary>
+    /// True once a connection has succeeded at least once. Distinguishes "the service went away"
+    /// from "we have never reached it", which need different things said to the user.
+    /// </summary>
+    public bool HasEverConnected { get; private set; }
+
     public void Start() => _loop = Task.Run(() => RunAsync(_cts.Token));
+
+    /// <summary>
+    /// Abandons the current backoff and reconnects immediately. The ladder climbs to 30 seconds,
+    /// which is far too long to sit staring at a banner after starting the service by hand.
+    /// </summary>
+    public void RetryNow()
+    {
+        _retryIndex = 0;
+        _retryNow.TrySetResult(true);
+    }
 
     /// <summary>
     /// Runs an operation against the current client. Returns default and lets the reconnect loop
@@ -89,6 +109,7 @@ public sealed class ServiceConnection : IAsyncDisposable
                 // Subscribe first, then read: an event racing in between is applied on top of a
                 // state that is at least as old, never dropped.
                 var state = await client.GetStateAsync(ct).ConfigureAwait(false);
+                HasEverConnected = true;
                 Post(() =>
                 {
                     ConnectionChanged?.Invoke(true);
@@ -112,9 +133,15 @@ public sealed class ServiceConnection : IAsyncDisposable
             var delay = RetrySecondsLadder[Math.Min(_retryIndex, RetrySecondsLadder.Length - 1)];
             _retryIndex++;
 
+            _retryNow = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(delay), ct).ConfigureAwait(false);
+                // Whichever comes first: the backoff elapsing, or the user pressing Retry.
+                await Task.WhenAny(Task.Delay(TimeSpan.FromSeconds(delay), ct), _retryNow.Task)
+                    .ConfigureAwait(false);
+
+                ct.ThrowIfCancellationRequested();
             }
             catch (OperationCanceledException)
             {

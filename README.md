@@ -223,6 +223,23 @@ The design's backdrop covers "the whole app surface". Here it dims whichever win
 dialog; when it is opened from the tray there is no app surface to dim, and darkening the user's
 whole desktop for a file decision would be more intrusive than the design intends.
 
+### When the service is not running
+
+The tray app is a per-user process and the service is a machine-level one, so either can be absent
+while the other runs. When there is no connection the flyout shows a banner, and the pair list is
+dimmed and made non-interactive rather than hidden: what was last known is still the most useful
+thing on screen, but it must not read as live while nothing is syncing.
+
+The banner distinguishes two situations, because they need different things from the user. The SCM
+is queried directly (`ServiceControl`) for whether the service is installed and what state it is
+in, and that is combined with whether a connection has ever succeeded — "not installed" is only
+credible if the app has never reached it, since having talked to it and then lost it means
+something is there. "Start service" appears only when there is a stopped service to start, and
+elevates, because starting a service is an administrator action.
+
+Retry cuts the reconnect backoff short. The ladder climbs to 30 seconds, which is far too long to
+wait after starting the service by hand.
+
 ### Notifications
 
 Every string is in `Notifications/ToastCopy.cs`, transcribed from the table in

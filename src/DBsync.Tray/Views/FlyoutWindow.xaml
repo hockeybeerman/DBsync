@@ -76,11 +76,54 @@
           </Button>
         </Grid>
 
+        <!-- ── Service-not-running banner ──────────────────────────────── -->
+        <Border Style="{StaticResource BannerStyle}"
+                Visibility="{Binding ShowBanner, Converter={StaticResource BoolToVisibility}}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <icons:Icon Grid.Column="0" Key="CloudSlash" Size="15" Margin="0,1,8.4,0"
+                        VerticalAlignment="Top" Foreground="{DynamicResource AccentBrush}" />
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding BannerTitle}" FontSize="13" />
+              <TextBlock Text="{Binding BannerBody}" FontSize="11" TextWrapping="Wrap" Margin="0,1,0,0"
+                         Foreground="{DynamicResource TextMuted55Brush}" />
+              <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <Button Style="{StaticResource PrimaryButtonStyle}" Content="Start service"
+                        Command="{Binding StartServiceCommand}" Margin="0,0,5.6,0"
+                        ToolTip="Starting a service needs administrator approval"
+                        Visibility="{Binding CanStartService, Converter={StaticResource BoolToVisibility}}" />
+                <Button Style="{StaticResource GhostButtonStyle}" Content="Retry"
+                        Command="{Binding RetryCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+        </Border>
+
         <!-- ── Pair list ───────────────────────────────────────────────── -->
         <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Visibility="{Binding HasPairs, Converter={StaticResource BoolToVisibility}}">
           <ItemsControl ItemsSource="{Binding Pairs}">
+            <ItemsControl.Style>
+              <Style TargetType="ItemsControl">
+                <Style.Triggers>
+                  <!--
+                    Dimmed, not hidden: what was last known is still the most useful thing to
+                    show, but it must not read as live while nothing is syncing.
+                  -->
+                  <DataTrigger Binding="{Binding PairsAreStale}" Value="True">
+                    <Setter Property="Opacity" Value="0.45" />
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </ItemsControl.Style>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Button Style="{StaticResource PairRowStyle}" Click="OnPairRow">

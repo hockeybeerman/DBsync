@@ -39,6 +39,18 @@
     </Style.Triggers>
   </Style>
 
+  <!-- ── Service-not-running banner ───────────────────────────────────────
+       Not in the design, which never draws a disconnected flyout. It sits between the header and
+       the list, on the surface colour with an accent edge, so it reads as a condition of the whole
+       panel rather than of any one pair.
+  -->
+  <Style x:Key="BannerStyle" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="2,0,0,0" />
+    <Setter Property="Padding" Value="11.2,8.4,11.2,8.4" />
+  </Style>
+
   <!-- ── Pair row ─────────────────────────────────────────────────────────
        A full-width button: the whole row is the click target, per the design.
   -->

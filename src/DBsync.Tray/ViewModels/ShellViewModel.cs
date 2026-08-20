@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
+using DBsync.Tray.Interop;
 using DBsync.Tray.Notifications;
 using DBsync.Tray.Services;
 using DBsync.Tray.Theming;
@@ -37,6 +38,8 @@ public sealed class ShellViewModel : ObservableObject
         };
 
         TogglePauseCommand = new RelayCommand(TogglePause, () => IsConnected);
+        StartServiceCommand = new RelayCommand(StartService, () => !Busy);
+        RetryCommand = new RelayCommand(RetryConnection, () => !Busy);
         SetLightCommand = new RelayCommand(() => SetAppearance(AppearanceMode.Light));
         SetDarkCommand = new RelayCommand(() => SetAppearance(AppearanceMode.Dark));
         SetMatchWindowsCommand = new RelayCommand(() => SetAppearance(AppearanceMode.MatchWindows));
@@ -100,11 +103,120 @@ public sealed class ShellViewModel : ObservableObject
             Raise(nameof(HasPairs));
             Raise(nameof(StatusLine));
             Raise(nameof(EmptyStateText));
+            RaiseBanner();
             TogglePauseCommand.RaiseCanExecuteChanged();
         }
     }
 
     public bool HasPairs => Pairs.Count > 0;
+
+    // ---- Service-not-running banner -----------------------------------------
+
+    /// <summary>
+    /// The banner is shown whenever there is no service to talk to. It is not in the design, which
+    /// never draws a disconnected flyout, but the alternative is a pair list that looks live while
+    /// nothing is syncing.
+    /// </summary>
+    public bool ShowBanner => !IsConnected;
+
+    /// <summary>
+    /// True when rows are being shown from a connection that has since dropped. They are the last
+    /// thing known to be true, which is worth keeping — but they must not read as current.
+    /// </summary>
+    public bool PairsAreStale => !IsConnected && Pairs.Count > 0;
+
+    public string BannerTitle => Busy ? "Starting the DBsync service" : "Syncing is stopped";
+
+    /// <summary>
+    /// Says which of the two situations this is. "Not installed" and "installed but stopped" need
+    /// different things from the user, so they are never collapsed into one message.
+    /// </summary>
+    public string BannerBody => _serviceState switch
+    {
+        _ when Busy => "Waiting for it to come up.",
+
+        // "Not installed" is only credible if we never reached it. Having talked to it and then
+        // lost it means something is there — a manually run instance, or one just uninstalled —
+        // and telling the user to install it would send them the wrong way.
+        ServiceInstallState.NotInstalled when _connection.HasEverConnected =>
+            "The DBsync service has stopped, so nothing is syncing.",
+        ServiceInstallState.NotInstalled =>
+            "The DBsync service is not installed on this PC, so nothing can sync.",
+
+        ServiceInstallState.Changing => "The service is starting or stopping. This should clear itself.",
+        ServiceInstallState.Running =>
+            "The service is running but not reachable. Retrying automatically.",
+        _ => "The DBsync service is not running, so nothing is syncing.",
+    };
+
+    /// <summary>Offered only when there is actually a stopped service to start.</summary>
+    public bool CanStartService =>
+        _serviceState is ServiceInstallState.Stopped or ServiceInstallState.Unknown;
+
+    public RelayCommand StartServiceCommand { get; }
+    public RelayCommand RetryCommand { get; }
+
+    private ServiceInstallState _serviceState = ServiceInstallState.Unknown;
+    private bool _busy;
+
+    private bool Busy
+    {
+        get => _busy;
+        set
+        {
+            if (!Set(ref _busy, value)) return;
+            RaiseBanner();
+            StartServiceCommand.RaiseCanExecuteChanged();
+            RetryCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    private void RaiseBanner()
+    {
+        Raise(nameof(ShowBanner));
+        Raise(nameof(PairsAreStale));
+        Raise(nameof(BannerTitle));
+        Raise(nameof(BannerBody));
+        Raise(nameof(CanStartService));
+    }
+
+    /// <summary>
+    /// Asks the SCM what it thinks, so the banner can say something specific. Cheap, and only run
+    /// while disconnected.
+    /// </summary>
+    private void RefreshServiceState()
+    {
+        _serviceState = ServiceControl.Query();
+        RaiseBanner();
+    }
+
+    private void StartService()
+    {
+        Busy = true;
+
+        _ = Task.Run(() =>
+        {
+            var started = ServiceControl.TryStartElevated(out var error);
+
+            _dispatcher.BeginInvoke(() =>
+            {
+                Busy = false;
+                RefreshServiceState();
+
+                // Whether or not sc.exe reported success, go and look: the reconnect is what
+                // actually decides, and it is now rather than up to 30 seconds away.
+                if (started) _connection.RetryNow();
+                else if (error is { Length: > 0 }) ToastRequested?.Invoke(
+                    new ToastMessage(ToastKind.Paused, "Could not start the service", error));
+            });
+        });
+    }
+
+    private void RetryConnection()
+    {
+        RefreshServiceState();
+        _connection.RetryNow();
+    }
 
     /// <summary>Colours the header line accent rather than calm. Mirrors the service's own count.</summary>
     public bool NeedsAttention => !PausedAll && Pairs.Any(pair => pair.Status == PairStatus.Conflict);
@@ -172,6 +284,7 @@ public sealed class ShellViewModel : ObservableObject
 
         Raise(nameof(HasPairs));
         Raise(nameof(NeedsAttention));
+        Raise(nameof(PairsAreStale));
     }
 
     private void OnPairChanged(PairChangedEvent changed)
@@ -212,6 +325,9 @@ public sealed class ShellViewModel : ObservableObject
         IsConnected = connected;
 
         if (connected) return;
+
+        // Only worth asking the SCM when there is something to explain.
+        RefreshServiceState();
 
         // Nothing is moving while the service is away; a spinning glyph would claim otherwise.
         AnySyncing = false;
