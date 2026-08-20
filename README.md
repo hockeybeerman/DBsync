@@ -4,16 +4,16 @@ The machine-level half of DBsync: a Windows Service that owns the sync engine, p
 contract the tray app talks to it over. The design this implements is in [docs/README.md](docs/README.md)
 and [docs/DBsync.dc.html](docs/DBsync.dc.html).
 
-The tray UI is **not** in this repo yet — see [Not built yet](#not-built-yet).
+The tray app lives here too — see [Tray app](#tray-app) — as does the CLI.
 
 ## Layout
 
 | Project | Target | What it is |
 | --- | --- | --- |
-| `src/DBsync.Contracts` | `net6.0` | DTOs, the named-pipe wire protocol, and `DBsyncClient`. Referenced by the service, the CLI, and (later) the tray app. |
+| `src/DBsync.Contracts` | `net6.0` | DTOs, the named-pipe wire protocol, and `DBsyncClient`. Referenced by the service, the CLI and the tray app. |
 | `src/DBsync.Service` | `net6.0-windows` | The service: sync engine, config store, SQLite history, pipe server. |
 | `src/DBsync.Cli` | `net6.0-windows` | `dbsync.exe` — drives the service from a terminal. Doubles as a worked example of the contract. |
-| `src/DBsync.Tray` | `net6.0-windows` (WPF) | The per-user tray app: tray icon and flyout — see [Tray app](#tray-app). |
+| `src/DBsync.Tray` | `net6.0-windows10.0.17763.0` (WPF) | The per-user tray app: tray icon and flyout — see [Tray app](#tray-app). |
 
 ## Build and install
 
