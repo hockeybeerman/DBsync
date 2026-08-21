@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -17,6 +17,7 @@ public partial class FlyoutWindow : Window
 
     private readonly ShellViewModel _shell;
     private Storyboard? _rotation;
+    private bool _rowMenuOpen;
 
     public FlyoutWindow(ShellViewModel shell)
     {
@@ -35,6 +36,9 @@ public partial class FlyoutWindow : Window
 
     /// <summary>Raised for the header and footer buttons that open other surfaces.</summary>
     public event Action<string>? NavigationRequested;
+
+    /// <summary>Raised when a row's context menu asks to remove that pair.</summary>
+    public event Action<PairViewModel>? PairRemoveRequested;
 
     public void ShowFlyout()
     {
@@ -128,6 +132,27 @@ public partial class FlyoutWindow : Window
         if (sender is Button { DataContext: PairViewModel pair }) PairActivated?.Invoke(pair);
     }
 
+    private void OnRemovePair(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { DataContext: PairViewModel pair }) PairRemoveRequested?.Invoke(pair);
+    }
+
+    /// <summary>
+    /// The flyout dismisses on deactivate, and opening a context menu takes activation with it —
+    /// which would close the panel out from under the menu the user just opened. Hold it open
+    /// while a row menu is up.
+    /// </summary>
+    private void OnRowMenuOpened(object sender, RoutedEventArgs e) => _rowMenuOpen = true;
+
+    private void OnRowMenuClosed(object sender, RoutedEventArgs e)
+    {
+        _rowMenuOpen = false;
+
+        // Focus went to the menu, so the flyout is no longer active. Take it back, otherwise the
+        // panel sits there ignoring the next click somewhere else.
+        if (IsVisible && !IsActive && !StayOpenOnDeactivate) HideFlyout();
+    }
+
     private void OnActivity(object sender, RoutedEventArgs e) => NavigationRequested?.Invoke("activity");
 
     private void OnSettings(object sender, RoutedEventArgs e) => NavigationRequested?.Invoke("settings");
@@ -144,7 +169,7 @@ public partial class FlyoutWindow : Window
     protected override void OnDeactivated(EventArgs e)
     {
         base.OnDeactivated(e);
-        if (IsVisible && !StayOpenOnDeactivate) HideFlyout();
+        if (IsVisible && !StayOpenOnDeactivate && !_rowMenuOpen) HideFlyout();
     }
 
     /// <summary>Escape closes it too.</summary>

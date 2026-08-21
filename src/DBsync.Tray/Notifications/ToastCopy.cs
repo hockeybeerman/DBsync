@@ -1,4 +1,4 @@
-namespace DBsync.Tray.Notifications;
+﻿namespace DBsync.Tray.Notifications;
 
 /// <summary>What a toast is about, so a click can route back to the right surface.</summary>
 public enum ToastKind
@@ -12,6 +12,9 @@ public enum ToastKind
 
     /// <summary>A share refused the stored sign-in.</summary>
     CredentialsNeeded,
+
+    /// <summary>A folder pair was removed.</summary>
+    PairRemoved,
 }
 
 /// <summary>One notification, ready to render.</summary>
@@ -30,6 +33,14 @@ public static class ToastCopy
     public static ToastMessage PairCreated(string localPath, string sharePath) =>
         new(ToastKind.PairCreated, "Folder pair created",
             $"{localPath} is now syncing with {sharePath}");
+
+    /// <summary>
+    /// Not in the design's table, and the counterpart to PairCreated. It repeats that no files
+    /// were touched: the confirmation said so, but the toast is what the user is left looking at.
+    /// </summary>
+    public static ToastMessage PairRemoved(string pairName) =>
+        new(ToastKind.PairRemoved, "Folder pair removed",
+            $"{pairName} is no longer syncing. No files were deleted.");
 
     public static ToastMessage Paused() =>
         new(ToastKind.Paused, "Syncing paused",

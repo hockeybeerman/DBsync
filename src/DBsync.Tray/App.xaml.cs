@@ -25,6 +25,7 @@ public partial class App : Application
     private ToastStack? _toastStack;
     private CredentialsDialog? _credentials;
     private SingleInstance? _instance;
+    private RemovePairDialog? _removal;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -90,6 +91,7 @@ public partial class App : Application
         _flyout = new FlyoutWindow(_shell) { StayOpenOnDeactivate = pinOpen };
         _flyout.PairActivated += OnPairActivated;
         _flyout.NavigationRequested += OnNavigationRequested;
+        _flyout.PairRemoveRequested += ShowRemovePair;
 
         // Toasts before the tray icon, so a notification raised during the first state push has
         // somewhere to go.
@@ -217,6 +219,29 @@ public partial class App : Application
         _credentials.Closed += (_, _) => _credentials = null;
         _credentials.Show();
         _credentials.Activate();
+    }
+
+    /// <summary>
+    /// Confirms removing a folder pair. The row's own projection is enough here - unlike the
+    /// sign-in dialog, nothing needs re-fetching, and the paths shown are the ones the user was
+    /// just looking at.
+    /// </summary>
+    private void ShowRemovePair(PairViewModel pair)
+    {
+        if (_removal is not null)
+        {
+            _removal.Activate();
+            return;
+        }
+
+        _flyout?.HideFlyout();
+
+        var viewModel = new RemovePairViewModel(_connection!, pair);
+        _removal = new RemovePairDialog(viewModel);
+        _removal.Completed += toast => { if (toast is not null) _toasts?.Show(toast); };
+        _removal.Closed += (_, _) => _removal = null;
+        _removal.Show();
+        _removal.Activate();
     }
 
     /// <summary>

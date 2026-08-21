@@ -1,4 +1,4 @@
-<Window x:Class="DBsync.Tray.Views.FlyoutWindow"
+﻿<Window x:Class="DBsync.Tray.Views.FlyoutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icons="clr-namespace:DBsync.Tray.Icons"
@@ -127,6 +127,20 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Button Style="{StaticResource PairRowStyle}" Click="OnPairRow">
+
+                  <!--
+                    Right-click removes the pair. The design lists per-pair settings as still to
+                    build (#9), and a left-click already routes to conflicts, sign-in or activity -
+                    so removal goes on the context menu, where it does not compete with any of
+                    them and will not have to move once the detail surface lands.
+                  -->
+                  <Button.ContextMenu>
+                    <ContextMenu Style="{StaticResource TrayContextMenuStyle}"
+                                 Opened="OnRowMenuOpened" Closed="OnRowMenuClosed">
+                      <MenuItem Header="Remove folder pair…" Click="OnRemovePair" />
+                    </ContextMenu>
+                  </Button.ContextMenu>
+
                   <StackPanel>
 
                     <!-- Line 1: status glyph, name, tag -->
