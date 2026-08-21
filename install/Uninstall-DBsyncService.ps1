@@ -50,6 +50,26 @@ if (Get-ItemProperty -Path $runKey -Name $serviceName -ErrorAction SilentlyConti
 $shortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\DBsync.lnk'
 if (Test-Path $shortcut) { Remove-Item -Force $shortcut }
 
+$arp = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$serviceName"
+if (Test-Path $arp) { Remove-Item -Path $arp -Recurse -Force }
+
+# Remove the binaries last. This script is running from inside that directory when launched from
+# Add/Remove Programs, so step out of it first; PowerShell has already read the file into memory,
+# but the working directory would keep a handle on it.
+$installPath = Join-Path $env:ProgramFiles 'DBsync'
+if (Test-Path $installPath) {
+    Set-Location $env:SystemRoot
+    Start-Sleep -Seconds 1
+    try {
+        Remove-Item -Recurse -Force $installPath -ErrorAction Stop
+        Write-Host "Removed $installPath." -ForegroundColor Green
+    } catch {
+        # The uninstaller cannot always delete the file it is running from. Say so plainly rather
+        # than reporting a clean uninstall over a directory that is still there.
+        Write-Host "Could not fully remove $installPath - delete it manually." -ForegroundColor Yellow
+    }
+}
+
 if ($RemoveData) {
     $dataRoot = Join-Path $env:ProgramData 'DBsync'
     if (Test-Path $dataRoot) {

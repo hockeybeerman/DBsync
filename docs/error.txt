@@ -1,0 +1,468 @@
+See the end of this message for details on invoking 
+just-in-time (JIT) debugging instead of this dialog box.
+
+************** Exception Text **************
+System.InvalidOperationException: A style intended for type 'MenuItem' cannot be applied to type 'Separator'.
+   at System.Windows.Controls.ItemsControl.ApplyItemContainerStyle(DependencyObject container, Object item)
+   at System.Windows.Controls.ItemsControl.MS.Internal.Controls.IGeneratorHost.PrepareItemContainer(DependencyObject container, Object item)
+   at System.Windows.Controls.Panel.GenerateChildren()
+   at System.Windows.Controls.Panel.get_InternalChildren()
+   at System.Windows.Controls.StackPanel.StackMeasureHelper(IStackMeasure measureElement, IStackMeasureScrollData scrollData, Size constraint)
+   at System.Windows.Controls.StackPanel.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Controls.Border.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Controls.Control.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Documents.AdornerDecorator.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Controls.Decorator.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Controls.Primitives.PopupRoot.MeasureOverride(Size constraint)
+   at System.Windows.FrameworkElement.MeasureCore(Size availableSize)
+   at System.Windows.UIElement.Measure(Size availableSize)
+   at System.Windows.Interop.HwndSource.SetLayoutSize()
+   at System.Windows.Interop.HwndSource.set_RootVisualInternal(Visual value)
+   at System.Windows.Controls.Primitives.Popup.SetRootVisualToPopupRoot()
+   at System.Windows.Controls.Primitives.Popup.CreateWindow(Boolean asyncCall)
+   at System.Windows.Controls.Primitives.Popup.OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+   at System.Windows.DependencyObject.OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+   at System.Windows.FrameworkElement.OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+   at System.Windows.DependencyObject.NotifyPropertyChange(DependencyPropertyChangedEventArgs args)
+   at System.Windows.DependencyObject.UpdateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry& newEntry, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType)
+   at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
+   at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
+   at System.Windows.Data.BindingOperations.SetBinding(DependencyObject target, DependencyProperty dp, BindingBase binding)
+   at System.Windows.Controls.Primitives.Popup.CreateRootPopupInternal(Popup popup, UIElement child, Boolean bindTreatMousePlacementAsBottomProperty)
+   at System.Windows.Controls.ContextMenu.HookupParentPopup()
+   at System.Windows.Controls.ContextMenu.OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+   at System.Windows.DependencyObject.OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+   at System.Windows.FrameworkElement.OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+   at System.Windows.DependencyObject.NotifyPropertyChange(DependencyPropertyChangedEventArgs args)
+   at System.Windows.DependencyObject.UpdateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry& newEntry, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType)
+   at System.Windows.DependencyObject.SetValueCommon(DependencyProperty dp, Object value, PropertyMetadata metadata, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType, Boolean isInternal)
+   at System.Windows.DependencyObject.SetValue(DependencyProperty dp, Object value)
+   at System.Windows.Controls.ContextMenu.set_IsOpen(Boolean value)
+   at DBsync.Tray.Tray.TrayIconHost.ShowContextMenu() in C:\GitHubRepos\DBsync\src\DBsync.Tray\Tray\TrayIconHost.cs:line 101
+   at DBsync.Tray.Tray.TrayIconHost.OnMouseUp(Object sender, MouseEventArgs e) in C:\GitHubRepos\DBsync\src\DBsync.Tray\Tray\TrayIconHost.cs:line 81
+   at System.Windows.Forms.NotifyIcon.OnMouseUp(MouseEventArgs e)
+   at System.Windows.Forms.NotifyIcon.WmMouseUp(Message& m, MouseButtons button)
+   at System.Windows.Forms.NotifyIcon.WndProc(Message& msg)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, WM msg, IntPtr wparam, IntPtr lparam)
+
+
+************** Loaded Assemblies **************
+System.Private.CoreLib
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Private.CoreLib.dll
+----------------------------------------
+DBsync.Tray
+    Assembly Version: 1.0.0.0
+    Win32 Version: 1.0.0.0
+    CodeBase: file:///C:/Program%20Files/DBsync/DBsync.Tray.dll
+----------------------------------------
+PresentationFramework
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/PresentationFramework.dll
+----------------------------------------
+WindowsBase
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/WindowsBase.dll
+----------------------------------------
+System.Runtime
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.dll
+----------------------------------------
+System.Xaml
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Xaml.dll
+----------------------------------------
+System.IO.Packaging
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.422.16404
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.IO.Packaging.dll
+----------------------------------------
+System.Private.Uri
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Private.Uri.dll
+----------------------------------------
+PresentationCore
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/PresentationCore.dll
+----------------------------------------
+DirectWriteForwarder
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6,0,522,21509 @Commit: 14bf2e54800ba75bfd06cbb4f2e470cbfffc9a5b
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/DirectWriteForwarder.dll
+----------------------------------------
+System.Runtime.Extensions
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.Extensions.dll
+----------------------------------------
+System.Runtime.InteropServices
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.InteropServices.dll
+----------------------------------------
+System.Runtime.CompilerServices.VisualC
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.CompilerServices.VisualC.dll
+----------------------------------------
+System.Diagnostics.Debug
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Diagnostics.Debug.dll
+----------------------------------------
+System.Threading
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Threading.dll
+----------------------------------------
+Microsoft.Win32.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/Microsoft.Win32.Primitives.dll
+----------------------------------------
+System.Collections.NonGeneric
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Collections.NonGeneric.dll
+----------------------------------------
+Microsoft.Win32.Registry
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/Microsoft.Win32.Registry.dll
+----------------------------------------
+System.Collections
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Collections.dll
+----------------------------------------
+System.Collections.Specialized
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Collections.Specialized.dll
+----------------------------------------
+System.ComponentModel.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.ComponentModel.Primitives.dll
+----------------------------------------
+System.Threading.Thread
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Threading.Thread.dll
+----------------------------------------
+System.Configuration.ConfigurationManager
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.422.16404
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Configuration.ConfigurationManager.dll
+----------------------------------------
+System.Runtime.InteropServices.RuntimeInformation
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.InteropServices.RuntimeInformation.dll
+----------------------------------------
+System.Xml.ReaderWriter
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Xml.ReaderWriter.dll
+----------------------------------------
+System.Private.Xml
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Private.Xml.dll
+----------------------------------------
+System.Net.WebClient
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Net.WebClient.dll
+----------------------------------------
+System.ComponentModel.EventBasedAsync
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.ComponentModel.EventBasedAsync.dll
+----------------------------------------
+System.Memory
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Memory.dll
+----------------------------------------
+System.Text.Encoding.Extensions
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Text.Encoding.Extensions.dll
+----------------------------------------
+System.Linq
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Linq.dll
+----------------------------------------
+System.Threading.ThreadPool
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Threading.ThreadPool.dll
+----------------------------------------
+System.Diagnostics.TraceSource
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Diagnostics.TraceSource.dll
+----------------------------------------
+System.ComponentModel.TypeConverter
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.ComponentModel.TypeConverter.dll
+----------------------------------------
+System.Windows.Extensions
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.422.16404
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Windows.Extensions.dll
+----------------------------------------
+System.ComponentModel
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.ComponentModel.dll
+----------------------------------------
+System.Collections.Concurrent
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Collections.Concurrent.dll
+----------------------------------------
+System.ObjectModel
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.ObjectModel.dll
+----------------------------------------
+System.Net.Requests
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Net.Requests.dll
+----------------------------------------
+System.Net.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Net.Primitives.dll
+----------------------------------------
+System.Net.WebHeaderCollection
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Net.WebHeaderCollection.dll
+----------------------------------------
+UIAutomationTypes
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/UIAutomationTypes.dll
+----------------------------------------
+System.Text.Json
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Text.Json.dll
+----------------------------------------
+System.Reflection.Emit.Lightweight
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Reflection.Emit.Lightweight.dll
+----------------------------------------
+System.Reflection.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Reflection.Primitives.dll
+----------------------------------------
+System.Reflection.Emit.ILGeneration
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Reflection.Emit.ILGeneration.dll
+----------------------------------------
+System.Text.Encodings.Web
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Text.Encodings.Web.dll
+----------------------------------------
+System.Runtime.Intrinsics
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.Intrinsics.dll
+----------------------------------------
+System.Numerics.Vectors
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Numerics.Vectors.dll
+----------------------------------------
+System.Runtime.CompilerServices.Unsafe
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.CompilerServices.Unsafe.dll
+----------------------------------------
+Microsoft.Win32.SystemEvents
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.422.16404
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/Microsoft.Win32.SystemEvents.dll
+----------------------------------------
+DBsync.Contracts
+    Assembly Version: 1.0.0.0
+    Win32 Version: 1.0.0.0
+    CodeBase: file:///C:/Program%20Files/DBsync/DBsync.Contracts.dll
+----------------------------------------
+System.Diagnostics.Process
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Diagnostics.Process.dll
+----------------------------------------
+PresentationFramework.Aero2
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/PresentationFramework.Aero2.dll
+----------------------------------------
+System.Windows.Controls.Ribbon
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Windows.Controls.Ribbon.dll
+----------------------------------------
+WindowsFormsIntegration
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/WindowsFormsIntegration.dll
+----------------------------------------
+System.Runtime.Loader
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.Loader.dll
+----------------------------------------
+Microsoft.Toolkit.Uwp.Notifications
+    Assembly Version: 7.1.0.0
+    Win32 Version: 7.1.3.1
+    CodeBase: file:///C:/Program%20Files/DBsync/Microsoft.Toolkit.Uwp.Notifications.dll
+----------------------------------------
+Microsoft.Windows.SDK.NET
+    Assembly Version: 10.0.17763.24
+    Win32 Version: 10.0.17763.25
+    CodeBase: file:///C:/Program%20Files/DBsync/Microsoft.Windows.SDK.NET.dll
+----------------------------------------
+WinRT.Runtime
+    Assembly Version: 1.6.0.0
+    Win32 Version: 1.6.2.38681
+    CodeBase: file:///C:/Program%20Files/DBsync/WinRT.Runtime.dll
+----------------------------------------
+System.Drawing.Common
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.422.16404
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Drawing.Common.dll
+----------------------------------------
+System.Drawing.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Drawing.Primitives.dll
+----------------------------------------
+System.IO.FileSystem
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.IO.FileSystem.dll
+----------------------------------------
+System.Security.Cryptography.Algorithms
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Security.Cryptography.Algorithms.dll
+----------------------------------------
+System.Security.Cryptography.Primitives
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Security.Cryptography.Primitives.dll
+----------------------------------------
+System.Reflection.Emit
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Reflection.Emit.dll
+----------------------------------------
+DynamicComActivator
+    Assembly Version: 0.0.0.0
+    Win32 Version: 7.1.3.1
+    CodeBase: file:///C:/Program%20Files/DBsync/Microsoft.Toolkit.Uwp.Notifications.dll
+----------------------------------------
+System.Security.Principal.Windows
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Security.Principal.Windows.dll
+----------------------------------------
+System.Security.Claims
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Security.Claims.dll
+----------------------------------------
+System.Windows.Forms
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.422.16407
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Windows.Forms.dll
+----------------------------------------
+System.Windows.Forms.Primitives
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.422.16407
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/System.Windows.Forms.Primitives.dll
+----------------------------------------
+System.IO.Pipes
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.IO.Pipes.dll
+----------------------------------------
+System.Threading.Overlapped
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Threading.Overlapped.dll
+----------------------------------------
+System.Security.AccessControl
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Security.AccessControl.dll
+----------------------------------------
+UIAutomationProvider
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/UIAutomationProvider.dll
+----------------------------------------
+PresentationFramework-SystemXml
+    Assembly Version: 6.0.2.0
+    Win32 Version: 6.0.522.21509
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/PresentationFramework-SystemXml.dll
+----------------------------------------
+System.Diagnostics.StackTrace
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Diagnostics.StackTrace.dll
+----------------------------------------
+Accessibility
+    Assembly Version: 4.0.0.0
+    Win32 Version: 6.0.422.16407
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/6.0.5/Accessibility.dll
+----------------------------------------
+System.Runtime.Serialization.Formatters
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Runtime.Serialization.Formatters.dll
+----------------------------------------
+System.Reflection.Metadata
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Reflection.Metadata.dll
+----------------------------------------
+System.Collections.Immutable
+    Assembly Version: 6.0.0.0
+    Win32 Version: 6.0.522.21309
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Collections.Immutable.dll
+----------------------------------------
+
+************** JIT Debugging **************
+
+

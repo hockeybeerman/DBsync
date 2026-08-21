@@ -102,8 +102,28 @@ if (Test-Path $trayExe) {
     }
 }
 
+# Without this DBsync cannot be uninstalled by any normal means: it does not appear in Settings,
+# and the only uninstall script lives in a source tree the installed machine may not even have.
+Write-Host 'Registering the uninstaller ...' -ForegroundColor Cyan
+Copy-Item (Join-Path $PSScriptRoot 'Uninstall-DBsyncService.ps1') $InstallPath -Force
+
+$uninstaller = Join-Path $InstallPath 'Uninstall-DBsyncService.ps1'
+$arp = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$serviceName"
+New-Item -Path $arp -Force | Out-Null
+Set-ItemProperty -Path $arp -Name 'DisplayName'     -Value 'DBsync'
+Set-ItemProperty -Path $arp -Name 'DisplayVersion'  -Value '1.0.0'
+Set-ItemProperty -Path $arp -Name 'Publisher'       -Value 'DBsync'
+Set-ItemProperty -Path $arp -Name 'InstallLocation' -Value $InstallPath
+Set-ItemProperty -Path $arp -Name 'DisplayIcon'     -Value $trayExe
+Set-ItemProperty -Path $arp -Name 'NoModify'        -Value 1 -Type DWord
+Set-ItemProperty -Path $arp -Name 'NoRepair'        -Value 1 -Type DWord
+Set-ItemProperty -Path $arp -Name 'UninstallString' `
+    -Value "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$uninstaller`""
+
 Write-Host ''
 Write-Host 'Installed. Next steps:' -ForegroundColor Green
+Write-Host '  To remove DBsync later: Settings > Apps > Installed apps > DBsync.'
+Write-Host ''
 Write-Host '  The DBsync icon is in the notification area. Windows 11 hides new tray icons by'
 Write-Host '  default - click the ^ chevron, then drag DBsync onto the taskbar to pin it.'
 Write-Host ''

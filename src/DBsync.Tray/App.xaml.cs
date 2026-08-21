@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using DBsync.Tray.Dev;
@@ -24,6 +24,7 @@ public partial class App : Application
     private ToastService? _toasts;
     private ToastStack? _toastStack;
     private CredentialsDialog? _credentials;
+    private SingleInstance? _instance;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -51,9 +52,24 @@ public partial class App : Application
             return;
         }
 
+        // Only one tray per session. --audit and --gallery are exempt above: they put no icon in
+        // the tray, and blocking them would make a build impossible to inspect while the real app
+        // is running.
+        _instance = SingleInstance.Claim();
+        if (_instance is null)
+        {
+            // The running instance is showing itself instead. Leaving quietly is the whole point.
+            Shutdown();
+            return;
+        }
+
         StartTrayApp(
             showImmediately: e.Args.Contains("--show", StringComparer.OrdinalIgnoreCase),
             pinOpen: e.Args.Contains("--pin", StringComparer.OrdinalIgnoreCase));
+
+        // Signalled from a background thread, so hop to the UI thread before touching a window.
+        _instance.ShowRequested += () => Dispatcher.BeginInvoke(new Action(() => _flyout?.ShowFlyout()));
+        _instance.ListenForOtherLaunches();
 
         if (e.Args.Contains("--wizard", StringComparer.OrdinalIgnoreCase)) ShowWizard();
     }
@@ -331,6 +347,7 @@ public partial class App : Application
         _toastStack?.CloseAll();
         _toasts?.Dispose();
         _tray?.Dispose();
+        _instance?.Dispose();
         _connection?.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(2));
         _theme?.Dispose();
         base.OnExit(e);

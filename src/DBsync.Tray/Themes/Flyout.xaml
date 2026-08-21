@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Composite styles for the tray flyout. Status-dependent colour lives in DataTriggers rather than
   the view model, so every value stays a DynamicResource and follows an appearance change.
 
@@ -222,7 +222,6 @@
     <Setter Property="BorderBrush" Value="{DynamicResource EdgeMdBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="5.6" />
-    <Setter Property="ItemContainerStyle" Value="{StaticResource TrayMenuItemStyle}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ContextMenu">
@@ -238,6 +237,13 @@
       </Setter.Value>
     </Setter>
     <Style.Resources>
+      <!--
+        Applied as implicit styles rather than through ItemContainerStyle. ItemContainerStyle is
+        handed to every container the menu generates, including the Separator, and WPF throws
+        outright when a MenuItem style lands on one - which took the whole app down the first time
+        anyone right-clicked the tray icon.
+      -->
+      <Style TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}" />
       <Style TargetType="Separator">
         <Setter Property="Height" Value="1" />
         <Setter Property="Margin" Value="5.6,2.8,5.6,2.8" />
