@@ -1,4 +1,4 @@
-namespace DBsync.Contracts;
+﻿namespace DBsync.Contracts;
 
 /// <summary>Everything the tray flyout needs for a full repaint.</summary>
 public sealed class ServiceState
@@ -25,6 +25,17 @@ public sealed class ServiceState
     /// N queued changes" — without it that number would have to be invented.
     /// </summary>
     public int QueuedChanges { get; set; }
+
+    /// <summary>
+    /// The Windows account the service is logged on as, e.g. "NT AUTHORITY\SYSTEM" or
+    /// "CONTOSO\alice".
+    /// <para>
+    /// This is the identity a share actually sees when no credentials are stored for a pair, so
+    /// the wizard can say whose access is being used rather than leaving the user to guess. It is
+    /// the service's own identity, not the signed-in user's - the two are usually different.
+    /// </para>
+    /// </summary>
+    public string ServiceAccount { get; set; } = "";
 }
 
 /// <summary>One row of the activity &amp; history table.</summary>

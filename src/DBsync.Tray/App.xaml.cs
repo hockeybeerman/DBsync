@@ -309,7 +309,8 @@ public partial class App : Application
         // focus — which is what keeps the two from overlapping.
         _flyout?.HideFlyout();
 
-        var viewModel = new WizardViewModel(_connection!, UserSettings.Current, editing);
+        var viewModel = new WizardViewModel(_connection!, UserSettings.Current,
+            _shell?.ServiceAccount ?? "", editing);
         _wizard = new WizardWindow(viewModel);
         _wizard.Completed += saved =>
         {
@@ -317,7 +318,11 @@ public partial class App : Application
             if (saved is not null && editing is null)
                 _toasts?.Show(ToastCopy.PairCreated(saved.LocalPath, saved.SharePath));
         };
-        _wizard.Closed += (_, _) => _wizard = null;
+        _wizard.Closed += (_, _) =>
+        {
+            viewModel.Detach();
+            _wizard = null;
+        };
         _wizard.Show();
         _wizard.Activate();
     }

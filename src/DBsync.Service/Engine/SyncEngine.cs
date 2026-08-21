@@ -84,7 +84,28 @@ public sealed class SyncEngine : IAsyncDisposable
             AnySyncing = !config.PausedAll && pairs.Any(pair => pair.Status == PairStatus.Syncing),
             ServiceVersion = Version,
             QueuedChanges = _workers.Values.Sum(worker => worker.PendingChanges),
+            ServiceAccount = CurrentAccount,
         };
+    }
+
+    /// <summary>
+    /// Resolved once: the logon identity cannot change without restarting the service, and asking
+    /// Windows for it on every state push would be work for an answer that never differs.
+    /// </summary>
+    private static readonly string CurrentAccount = ResolveCurrentAccount();
+
+    private static string ResolveCurrentAccount()
+    {
+        try
+        {
+            using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+            return identity.Name;
+        }
+        catch (Exception)
+        {
+            // Never worth failing a state push over a display string.
+            return "";
+        }
     }
 
     private FolderPair Idle(FolderPair pair)

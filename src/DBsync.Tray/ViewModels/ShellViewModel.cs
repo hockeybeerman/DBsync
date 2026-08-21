@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
 using DBsync.Tray.Interop;
@@ -17,6 +17,7 @@ public sealed class ShellViewModel : ObservableObject
         System.Windows.Application.Current.Dispatcher;
 
     private string _serviceStatusLine = "";
+    private string _serviceAccount = "";
     private bool _anySyncing;
     private bool _pausedAll;
     private bool _isConnected;
@@ -60,6 +61,17 @@ public sealed class ShellViewModel : ObservableObject
     /// proper banner treatment is #12; this at least does not lie.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// The Windows account the service is logged on as. Kept here rather than fetched where it is
+    /// needed: the shell already receives every state push, so a surface opened before the first
+    /// connection completes still gets the answer when it arrives.
+    /// </summary>
+    public string ServiceAccount
+    {
+        get => _serviceAccount;
+        private set => Set(ref _serviceAccount, value);
+    }
+
     public string StatusLine => IsConnected
         ? _serviceStatusLine
         : "DBsync service is not running";
@@ -255,6 +267,7 @@ public sealed class ShellViewModel : ObservableObject
 
     private void OnStateReplaced(ServiceState state)
     {
+        ServiceAccount = state.ServiceAccount;
         SetServiceStatusLine(state.StatusLine);
         AnySyncing = state.AnySyncing;
         PausedAll = state.PausedAll;

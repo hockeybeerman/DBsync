@@ -20,7 +20,17 @@
 [CmdletBinding()]
 param(
     [string] $InstallPath = (Join-Path $env:ProgramFiles 'DBsync'),
-    [switch] $SkipBuild
+    [switch] $SkipBuild,
+
+    # Windows account the service logs on as, e.g. 'CONTOSO\alice' or '.\alice'. Omit for
+    # LocalSystem. LocalSystem has no network identity of its own, so a share that authenticates
+    # sees the computer account rather than a person; running as a user is what makes a share the
+    # user can already reach work with no stored credentials at all.
+    [string] $ServiceAccount,
+
+    # Only for accounts that need one. Built-in service accounts and managed accounts do not.
+    # Left empty, the script prompts without echoing.
+    [System.Security.SecureString] $ServicePassword
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,6 +46,128 @@ function Assert-Administrator {
 }
 
 Assert-Administrator
+
+# '.\name' is the form everyone writes for a local account, and the form this script's own help
+# suggests - but NTAccount does not understand it, so spell out the machine name.
+function Resolve-AccountName([string] $account) {
+    $trimmed = $account.Trim()
+    if ($trimmed.StartsWith('.\')) { return "$env:COMPUTERNAME\" + $trimmed.Substring(2) }
+    return $trimmed
+}
+
+function Resolve-AccountSid([string] $account) {
+    try {
+        return (New-Object System.Security.Principal.NTAccount($account)).Translate(
+            [System.Security.Principal.SecurityIdentifier])
+    } catch {
+        throw "Could not find the account '$account'. Use DOMAIN\user, .\user for a local account, or a built-in name such as 'NT AUTHORITY\NetworkService'."
+    }
+}
+
+# Built-in service accounts authenticate by identity, not password. Asking for one - or passing an
+# empty one - is what makes 'sc config obj=' fail with a bad-credentials error for these.
+function Test-AccountNeedsPassword([string] $account) {
+    $normalized = $account.Trim()
+    if ($normalized -like 'NT AUTHORITY\*') { return $false }
+    if ($normalized -like 'NT SERVICE\*') { return $false }
+    if ($normalized -in @('LocalSystem', 'LocalService', 'NetworkService')) { return $false }
+    if ($normalized.EndsWith('$')) { return $false }   # gMSA / computer account
+    return $true
+}
+
+# A service account that cannot log on as a service fails to start with error 1069, which reads as
+# a bad password and sends people hunting in the wrong place.
+function Grant-LogonAsService([System.Security.Principal.SecurityIdentifier] $sid) {
+    $work = Join-Path ([System.IO.Path]::GetTempPath()) ("dbsync-rights-" + [Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $work | Out-Null
+    try {
+        $exported = Join-Path $work 'export.inf'
+        $updated  = Join-Path $work 'update.inf'
+        $database = Join-Path $work 'secedit.sdb'
+
+        & secedit.exe /export /areas USER_RIGHTS /cfg $exported | Out-Null
+        if (-not (Test-Path $exported)) { throw 'secedit could not export the current user rights.' }
+
+        $line = (Get-Content $exported | Where-Object { $_ -match '^SeServiceLogonRight' })
+        $holders = if ($line) { ($line -split '=', 2)[1].Trim() } else { '' }
+        # secedit exports a holder it can resolve as a plain account name and one it cannot as
+        # *SID, so comparing against *SID alone would miss an account that already holds the right
+        # and add it a second time.
+        $alreadyHeld = $false
+        foreach ($holder in ($holders -split ',')) {
+            $entry = $holder.Trim()
+            if (-not $entry) { continue }
+            if ($entry -eq "*$($sid.Value)") { $alreadyHeld = $true; break }
+            if ($entry.StartsWith('*')) { continue }
+            try {
+                $resolved = (New-Object System.Security.Principal.NTAccount($entry)).Translate(
+                    [System.Security.Principal.SecurityIdentifier]).Value
+                if ($resolved -eq $sid.Value) { $alreadyHeld = $true; break }
+            } catch {
+                # An entry naming an account that no longer exists. Left alone: it is not ours to
+                # tidy, and dropping it would silently change policy the installer never set.
+            }
+        }
+
+        if ($alreadyHeld) {
+            Write-Host '  already allowed to log on as a service.' -ForegroundColor DarkGray
+            return
+        }
+
+        $holders = if ($holders) { "$holders,*$($sid.Value)" } else { "*$($sid.Value)" }
+        @(
+            '[Unicode]'
+            'Unicode=yes'
+            '[Version]'
+            'signature="$CHICAGO$"'
+            'Revision=1'
+            '[Privilege Rights]'
+            "SeServiceLogonRight = $holders"
+        ) | Set-Content -Path $updated -Encoding Unicode
+
+        & secedit.exe /configure /db $database /cfg $updated /areas USER_RIGHTS | Out-Null
+        Write-Host '  granted the right to log on as a service.' -ForegroundColor DarkGray
+    } finally {
+        Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
+    }
+}
+
+# Config, the SQLite database and its journals all live here. BUILTIN\Users gets Write but not
+# Delete, which is not enough for SQLite to clean up its -wal and -shm files.
+function Grant-DataAccess([System.Security.Principal.SecurityIdentifier] $sid, [string] $path) {
+    if (-not (Test-Path $path)) { New-Item -ItemType Directory -Path $path -Force | Out-Null }
+    $acl = Get-Acl $path
+    $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
+        $sid, 'Modify', 'ContainerInherit,ObjectInherit', 'None', 'Allow')))
+    Set-Acl -Path $path -AclObject $acl
+    Write-Host "  granted Modify on $path." -ForegroundColor DarkGray
+}
+
+$serviceSid = $null
+if ($ServiceAccount) {
+    $ServiceAccount = Resolve-AccountName $ServiceAccount
+    $serviceSid = Resolve-AccountSid $ServiceAccount
+    if ((Test-AccountNeedsPassword $ServiceAccount) -and -not $ServicePassword) {
+        $ServicePassword = Read-Host -AsSecureString "Password for $ServiceAccount"
+    }
+}
+
+# Before publishing, not after: the running service and tray hold their own DLLs open, and
+# msbuild simply fails to copy over them.
+$existing = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+if ($existing) {
+    Write-Host 'Stopping the existing service ...' -ForegroundColor Yellow
+    if ($existing.Status -ne 'Stopped') { Stop-Service -Name $serviceName -Force }
+    & sc.exe delete $serviceName | Out-Null
+    Start-Sleep -Seconds 2
+}
+
+$runningTray = Get-Process -Name 'DBsync.Tray' -ErrorAction SilentlyContinue
+if ($runningTray) {
+    Write-Host 'Stopping the running tray app ...' -ForegroundColor Yellow
+    $runningTray | Stop-Process -Force
+    Start-Sleep -Seconds 1
+}
 
 if (-not $SkipBuild) {
     Write-Host "Publishing DBsync to $InstallPath ..." -ForegroundColor Cyan
@@ -57,14 +189,6 @@ if (-not $SkipBuild) {
 $exe = Join-Path $InstallPath 'DBsync.Service.exe'
 if (-not (Test-Path $exe)) { throw "Service executable not found at $exe." }
 
-$existing = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-if ($existing) {
-    Write-Host 'Stopping the existing service ...' -ForegroundColor Yellow
-    if ($existing.Status -ne 'Stopped') { Stop-Service -Name $serviceName -Force }
-    & sc.exe delete $serviceName | Out-Null
-    Start-Sleep -Seconds 2
-}
-
 Write-Host 'Registering the service ...' -ForegroundColor Cyan
 & sc.exe create $serviceName binPath= "`"$exe`"" start= auto DisplayName= 'DBsync' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'sc.exe create failed.' }
@@ -73,6 +197,32 @@ if ($LASTEXITCODE -ne 0) { throw 'sc.exe create failed.' }
 
 # Folders left un-synced are invisible to the user, so always come back after a crash.
 & sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/15000/restart/60000 | Out-Null
+
+if ($ServiceAccount) {
+    Write-Host "Configuring the service to run as $ServiceAccount ..." -ForegroundColor Cyan
+    Grant-LogonAsService $serviceSid
+    Grant-DataAccess $serviceSid (Join-Path $env:ProgramData 'DBsync')
+
+    # Set the account through WMI rather than 'sc config obj= password= ...'. sc.exe would put the
+    # password on a command line, where it is visible to anything that can list processes.
+    $plain = ''
+    if ($ServicePassword) {
+        $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ServicePassword)
+        try { $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) }
+        finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+    }
+
+    $result = Get-CimInstance Win32_Service -Filter "Name='$serviceName'" |
+        Invoke-CimMethod -MethodName Change -Arguments @{
+            StartName     = $ServiceAccount
+            StartPassword = $plain
+        }
+    $plain = $null
+
+    if ($result.ReturnValue -ne 0) {
+        throw "Could not set the service account (Win32_Service.Change returned $($result.ReturnValue)). 21 means the password or account name was rejected; 15 means the account is not allowed to log on as a service."
+    }
+}
 
 Write-Host 'Starting the service ...' -ForegroundColor Cyan
 Start-Service -Name $serviceName
@@ -130,7 +280,19 @@ Write-Host ''
 Write-Host "  $InstallPath\dbsync.exe status"
 Write-Host "  $InstallPath\dbsync.exe add --local C:\Work --share \\server\share"
 Write-Host ''
-Write-Host 'NOTE: the service runs as LocalSystem, which has no network identity. For a UNC'
-Write-Host 'destination that requires authentication, pass --user/--password when adding the pair'
-Write-Host '(they are filed in Windows Credential Manager), or reconfigure the service to run as a'
-Write-Host 'domain account that already has access to the share.'
+$runsAs = (Get-CimInstance Win32_Service -Filter "Name='$serviceName'").StartName
+Write-Host "  The service runs as: $runsAs"
+Write-Host ''
+if ($runsAs -eq 'LocalSystem' -or $runsAs -like 'NT AUTHORITY\*') {
+    Write-Host 'NOTE: this account has no network identity of its own, so a share that authenticates'
+    Write-Host 'sees the computer rather than a person. For a UNC destination that requires a sign-in,'
+    Write-Host 'pass --user/--password when adding the pair (filed in Windows Credential Manager), or'
+    Write-Host 're-run this script with -ServiceAccount to run as an account that already has access:'
+    Write-Host ''
+    Write-Host "  .\Install-DBsyncService.ps1 -ServiceAccount '$env:USERDOMAIN\$env:USERNAME'"
+} else {
+    Write-Host 'The service now carries that account''s network identity, so any share that account'
+    Write-Host 'can already reach needs no stored credentials. Two things to know: the service will'
+    Write-Host 'fail to start after that account''s password changes until this script is re-run, and'
+    Write-Host 'volume shadow copies (--vss) need the account to be an administrator.'
+}

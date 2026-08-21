@@ -1,4 +1,4 @@
-<Window x:Class="DBsync.Tray.Views.WizardWindow"
+﻿<Window x:Class="DBsync.Tray.Views.WizardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icons="clr-namespace:DBsync.Tray.Icons"
@@ -160,10 +160,17 @@
                      Text="{Binding SharePath, UpdateSourceTrigger=PropertyChanged}"
                      LostFocus="OnDestinationBlur" />
 
-            <!-- UNC only: credentials, filed in Credential Manager rather than config.json -->
-            <Border Style="{StaticResource SurfacePanelStyle}" Margin="0,0,0,11.2"
-                    Visibility="{Binding IsUnc, Converter={StaticResource BoolToVisibility}}">
+            <!--
+              Credentials, filed in Credential Manager rather than config.json. Shown for a mapped
+              drive as well as a UNC path: a drive letter is resolved to its UNC target and saved
+              as a UNC pair, so hiding these fields left that pair with no way to be given a
+              sign-in it might need.
+            -->
+            <Border Style="{StaticResource SurfacePanelStyle}" Margin="0,0,0,11.2">
               <StackPanel>
+                <TextBlock Text="Sign in to the share" Style="{StaticResource FieldLabelTextStyle}" />
+                <TextBlock Text="{Binding CredentialHint}" Style="{StaticResource SecondaryTextStyle}"
+                           TextWrapping="Wrap" Margin="0,0,0,8.4" />
                 <Grid Margin="0,0,0,8.4">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

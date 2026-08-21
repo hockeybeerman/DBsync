@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
 using DBsync.Tray.Icons;
@@ -34,10 +34,18 @@ public sealed class WizardViewModel : ObservableObject
     private bool _hasValidation;
     private bool _busy;
     private bool _checking;
+    private string _serviceAccount = "";
 
-    public WizardViewModel(ServiceConnection connection, UserSettings settings, FolderPair? editing = null)
+    public WizardViewModel(ServiceConnection connection, UserSettings settings, string serviceAccount,
+        FolderPair? editing = null)
     {
         _connection = connection;
+        _serviceAccount = serviceAccount;
+
+        // The shell's value is already right whenever the wizard is opened from the flyout. It is
+        // empty only when the wizard comes up before the first state push has landed, so listen
+        // for one rather than showing the vaguer wording for the life of the window.
+        if (_serviceAccount.Length == 0) _connection.StateReplaced += OnStateReplaced;
         _settings = settings;
         _editing = editing;
 
@@ -145,6 +153,39 @@ public sealed class WizardViewModel : ObservableObject
 
     public bool IsUnc => DestKind == DestinationKind.Unc;
     public bool IsDrive => DestKind == DestinationKind.Drive;
+
+    /// <summary>
+    /// The account the service is logged on as. Shown next to the sign-in fields so the meaning of
+    /// leaving them blank is stated rather than guessed at - it is the difference between "the
+    /// share sees me" and "the share sees this computer".
+    /// </summary>
+    public string ServiceAccount => _serviceAccount;
+
+    private void OnStateReplaced(ServiceState state)
+    {
+        if (state.ServiceAccount.Length == 0) return;
+
+        _serviceAccount = state.ServiceAccount;
+        Detach();
+        Raise(nameof(ServiceAccount));
+        Raise(nameof(CredentialHint));
+    }
+
+    /// <summary>
+    /// Drops the state subscription. Called when the window closes, so a wizard opened and
+    /// dismissed before the service ever answered does not stay alive attached to the connection.
+    /// </summary>
+    public void Detach() => _connection.StateReplaced -= OnStateReplaced;
+
+    /// <summary>
+    /// What happens if the username is left empty. Deliberately names the account rather than
+    /// saying "the service account", which tells the user nothing they can act on.
+    /// </summary>
+    public string CredentialHint => ServiceAccount.Length == 0
+        ? "Optional. Leave blank to connect as the account the DBsync service runs as."
+        : $"Optional. Leave blank to connect as {ServiceAccount}, which is the account the DBsync service runs as.";
+
+
 
     public string DestLabel => IsUnc ? "UNC path" : "Mapped drive path";
 
