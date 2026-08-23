@@ -232,11 +232,15 @@ $trayExe = Join-Path $InstallPath 'DBsync.Tray.exe'
 if (Test-Path $trayExe) {
     Write-Host 'Registering the tray app ...' -ForegroundColor Cyan
 
-    # Per-machine, so the tray comes up for whoever logs in - the service is machine-wide and the
-    # UI that drives it should not be tied to the account that happened to run the installer.
-    $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
-    New-ItemProperty -Path $runKey -Name $serviceName -Value "`"$trayExe`"" `
-        -PropertyType String -Force | Out-Null
+    # Sign-in launch is the tray app's own business now, kept per-user under HKCU so the settings
+    # window can turn it off without administrator rights (#8). A machine-wide entry cannot be
+    # switched off by the person it launches for, which would make that setting a lie - so clear
+    # any left by an earlier install, or the tray would be started twice.
+    $machineRunKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+    if (Get-ItemProperty -Path $machineRunKey -Name $serviceName -ErrorAction SilentlyContinue) {
+        Remove-ItemProperty -Path $machineRunKey -Name $serviceName
+        Write-Host '  removed the old machine-wide startup entry.' -ForegroundColor DarkGray
+    }
 
     $startMenu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
     $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $startMenu 'DBsync.lnk'))

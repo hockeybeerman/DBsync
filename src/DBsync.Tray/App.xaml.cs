@@ -26,6 +26,8 @@ public partial class App : Application
     private CredentialsDialog? _credentials;
     private SingleInstance? _instance;
     private RemovePairDialog? _removal;
+    private SettingsWindow? _settings;
+    private WelcomeWindow? _welcome;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -68,11 +70,19 @@ public partial class App : Application
             showImmediately: e.Args.Contains("--show", StringComparer.OrdinalIgnoreCase),
             pinOpen: e.Args.Contains("--pin", StringComparer.OrdinalIgnoreCase));
 
+        // On the very first launch, opt this user into sign-in launch. Done here rather than by
+        // the installer so it lands in their own hive - and only once, so turning it off in
+        // settings stays off instead of being re-enabled by the next launch.
+        if (!UserSettings.Current.HasSeenWelcome) Interop.StartupRegistration.Set(true);
+        else Interop.StartupRegistration.RefreshPath();
+
         // Signalled from a background thread, so hop to the UI thread before touching a window.
         _instance.ShowRequested += () => Dispatcher.BeginInvoke(new Action(() => _flyout?.ShowFlyout()));
         _instance.ListenForOtherLaunches();
 
         if (e.Args.Contains("--wizard", StringComparer.OrdinalIgnoreCase)) ShowWizard();
+        else if (!UserSettings.Current.HasSeenWelcome || e.Args.Contains("--welcome", StringComparer.OrdinalIgnoreCase))
+            ShowWelcome();
     }
 
     /// <param name="showImmediately">
@@ -150,8 +160,11 @@ public partial class App : Application
             case "activity":
                 ShowActivity();
                 break;
+            case "settings":
+                ShowSettings();
+                break;
             default:
-                ReportUnbuilt("A settings window is not designed yet — see issue #8.");
+                ReportUnbuilt($"Nothing is wired up for \"{target}\" yet.");
                 break;
         }
     }
@@ -219,6 +232,51 @@ public partial class App : Application
         _credentials.Closed += (_, _) => _credentials = null;
         _credentials.Show();
         _credentials.Activate();
+    }
+
+    /// <summary>
+    /// First run, once per user. Shown after the tray icon exists, so dismissing it leaves the app
+    /// visibly present rather than looking like it closed.
+    /// </summary>
+    private void ShowWelcome()
+    {
+        if (_welcome is not null)
+        {
+            _welcome.Activate();
+            return;
+        }
+
+        _welcome = new WelcomeWindow();
+        _welcome.Completed += addPair =>
+        {
+            // Recorded on either answer. "Not now" is a decision; asking again every launch is the
+            // nagging this app exists to avoid.
+            UserSettings.Current.HasSeenWelcome = true;
+            UserSettings.Current.Save();
+
+            if (addPair) ShowWizard();
+        };
+        _welcome.Closed += (_, _) => _welcome = null;
+        _welcome.Show();
+        _welcome.Activate();
+    }
+
+    /// <summary>Settings for the person: sign-in launch, appearance, and where the data lives.</summary>
+    private void ShowSettings()
+    {
+        if (_settings is not null)
+        {
+            if (_settings.WindowState == WindowState.Minimized) _settings.WindowState = WindowState.Normal;
+            _settings.Activate();
+            return;
+        }
+
+        _flyout?.HideFlyout();
+
+        _settings = new SettingsWindow(new SettingsViewModel(_shell!));
+        _settings.Closed += (_, _) => _settings = null;
+        _settings.Show();
+        _settings.Activate();
     }
 
     /// <summary>

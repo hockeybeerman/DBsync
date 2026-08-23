@@ -213,11 +213,22 @@
           </ItemsControl>
         </ScrollViewer>
 
-        <!-- Empty state. Not in the design, which never shows a pairless flyout; #8 replaces it. -->
-        <TextBlock Margin="16,4,16,12" FontSize="12" TextWrapping="Wrap"
-                   Foreground="{DynamicResource TextMuted55Brush}"
-                   Text="{Binding EmptyStateText}"
-                   Visibility="{Binding HasPairs, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+        <!--
+          Empty state. Not in the design, which never draws a pairless flyout - see #8. The brand
+          glyph is repeated at low opacity so the panel reads as a resting app rather than one
+          that failed to load, and the copy says what a pair is, since the footer's Add button
+          means nothing to someone who has not met the idea yet.
+        -->
+        <StackPanel Margin="16,10,16,14" HorizontalAlignment="Center"
+                    Visibility="{Binding HasPairs, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+          <icons:Icon Key="ShuffleSimple" Size="26" HorizontalAlignment="Center" Opacity="0.35"
+                      Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8.4" />
+          <TextBlock Text="{Binding EmptyStateText}" FontSize="13" TextAlignment="Center"
+                     TextWrapping="Wrap" HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding EmptyStateHint}" FontSize="11.5" TextAlignment="Center"
+                     TextWrapping="Wrap" MaxWidth="300" Margin="0,3,0,0" HorizontalAlignment="Center"
+                     Foreground="{DynamicResource TextMuted55Brush}" />
+        </StackPanel>
 
         <!-- ── Appearance ──────────────────────────────────────────────── -->
         <Grid Margin="11.2,8.4,11.2,0">

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -32,6 +32,13 @@ public sealed class UserSettings
     public static UserSettings Current { get; } = Load();
 
     public AppearanceMode Appearance { get; set; } = AppearanceMode.MatchWindows;
+
+    /// <summary>
+    /// Whether this user has been shown the welcome. Stored rather than inferred from "has no
+    /// pairs": someone who removes their last pair has already met DBsync and does not need
+    /// introducing again.
+    /// </summary>
+    public bool HasSeenWelcome { get; set; }
 
     /// <summary>
     /// Local folders offered under RECENT in the wizard's first step. Per-user like appearance,

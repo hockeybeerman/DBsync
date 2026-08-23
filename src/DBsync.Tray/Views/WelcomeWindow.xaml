@@ -1,0 +1,67 @@
+<Window x:Class="DBsync.Tray.Views.WelcomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icons="clr-namespace:DBsync.Tray.Icons"
+        SizeToContent="WidthAndHeight"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="True" ResizeMode="NoResize"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
+
+  <!--
+    First run, once per user. Same 520px card as the wizard it leads into, so the first thing a
+    person sees and the thing they land on are visibly the same application.
+
+    Not in the design, which never draws a first-run state - see issue #8. The copy explains a
+    folder pair in one sentence and says where the icon lives, because on Windows 11 a new tray
+    icon is hidden in the overflow, and an app you cannot find reads as an app that did not start.
+  -->
+
+  <Grid x:Name="Root" Width="520" Margin="24" RenderTransformOrigin="0.5,1">
+    <Grid.RenderTransform>
+      <TranslateTransform x:Name="RiseTransform" Y="10" />
+    </Grid.RenderTransform>
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            Effect="{DynamicResource ShadowLgEffect}" />
+
+    <Border CornerRadius="{DynamicResource RadiusLg}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource EdgeLgBrush}" BorderThickness="1"
+            Padding="11.2">
+      <StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8.4">
+          <icons:Icon Key="ShuffleSimple" Size="20" Margin="0,0,8.4,0"
+                      Foreground="{DynamicResource AccentBrush}" />
+          <TextBlock Text="Welcome to DBsync" Style="{StaticResource DialogTitleStyle}"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+
+        <TextBlock Style="{StaticResource DialogBodyStyle}" TextWrapping="Wrap" Margin="0,0,0,11.2"
+                   Text="DBsync keeps a folder on this PC in step with a folder on your network. Pick the two folders once and it handles the rest in the background — copying changes as they happen, and picking up where it left off when the network comes back." />
+
+        <Border Style="{StaticResource SurfacePanelStyle}"
+                Background="{DynamicResource BackgroundBrush}" Margin="0,0,0,11.2">
+          <StackPanel Orientation="Horizontal">
+            <icons:Icon Key="CaretUp" Size="15" Margin="0,2,8.4,0" VerticalAlignment="Top"
+                        Foreground="{DynamicResource AccentBrush}" />
+            <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" MaxWidth="430"
+                       Text="DBsync sits in the notification area, not the taskbar. Windows hides new icons there by default — click the ^ arrow, then drag DBsync down to keep it in view." />
+          </StackPanel>
+        </Border>
+
+        <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap"
+                   Text="Nothing syncs until you add a folder pair, and no files are moved without one." />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,11.2,0,0">
+          <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,5.6,0"
+                  Content="Not now" Click="OnDismiss" />
+          <Button Style="{StaticResource PrimaryButtonStyle}" Content="Add a folder pair"
+                  Click="OnAddPair" IsDefault="True" />
+        </StackPanel>
+
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

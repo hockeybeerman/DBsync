@@ -78,8 +78,17 @@ public sealed class ShellViewModel : ObservableObject
 
     /// <summary>Shown in place of the list. Distinguishes "no pairs" from "no service".</summary>
     public string EmptyStateText => IsConnected
-        ? "No folder pairs yet. Add one to start syncing."
-        : "Waiting for the DBsync service.";
+        ? "Nothing syncing yet"
+        : "Waiting for the DBsync service";
+
+    /// <summary>
+    /// The second line of the empty state. Explains what a folder pair is, because the footer's
+    /// Add button is meaningless to someone who has not met the idea - and says plainly that
+    /// nothing is being touched, which is the question an idle sync tool actually raises.
+    /// </summary>
+    public string EmptyStateHint => IsConnected
+        ? "A folder pair keeps a folder on this PC in step with one on your network. Add one below to start."
+        : "Your folder pairs will appear here once it is running. Nothing is being synced in the meantime.";
 
     private void SetServiceStatusLine(string value)
     {
@@ -116,6 +125,7 @@ public sealed class ShellViewModel : ObservableObject
             Raise(nameof(HasPairs));
             Raise(nameof(StatusLine));
             Raise(nameof(EmptyStateText));
+            Raise(nameof(EmptyStateHint));
             RaiseBanner();
             TogglePauseCommand.RaiseCanExecuteChanged();
         }
