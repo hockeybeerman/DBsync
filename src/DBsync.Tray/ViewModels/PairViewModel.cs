@@ -1,4 +1,4 @@
-using DBsync.Contracts;
+﻿using DBsync.Contracts;
 
 namespace DBsync.Tray.ViewModels;
 
@@ -20,6 +20,7 @@ public sealed class PairViewModel : ObservableObject
     private PairStatus _status;
     private int _percent;
     private bool _needsCredentials;
+    private bool _enabled = true;
 
     public PairViewModel(FolderPair pair) => Apply(pair);
 
@@ -105,6 +106,17 @@ public sealed class PairViewModel : ObservableObject
         private set => Set(ref _needsCredentials, value);
     }
 
+    /// <summary>
+    /// Whether this pair is running on its own account. Distinct from <see cref="Status"/> being
+    /// Paused, which is also true when everything is paused globally - the difference decides
+    /// whether resuming everything will restart this pair.
+    /// </summary>
+    public bool Enabled
+    {
+        get => _enabled;
+        private set => Set(ref _enabled, value);
+    }
+
     /// <summary>Line 4 exists only while syncing.</summary>
     public bool ShowProgress => Status == PairStatus.Syncing;
 
@@ -121,5 +133,6 @@ public sealed class PairViewModel : ObservableObject
         Status = pair.Status;
         Percent = pair.Percent;
         NeedsCredentials = pair.NeedsCredentials;
+        Enabled = pair.Enabled;
     }
 }

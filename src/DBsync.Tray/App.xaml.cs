@@ -28,6 +28,7 @@ public partial class App : Application
     private RemovePairDialog? _removal;
     private SettingsWindow? _settings;
     private WelcomeWindow? _welcome;
+    private PairDetailWindow? _detail;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -144,10 +145,7 @@ public partial class App : Application
             return;
         }
 
-        // The prototype opens the activity window for a non-conflict row as scaffolding; the real
-        // target is that pair's detail view, which is #9. Until then, show its history filtered to
-        // it, which is at least about the row that was clicked.
-        ShowActivity(pair.Id);
+        ShowPairDetail(pair.Id);
     }
 
     private void OnNavigationRequested(string target)
@@ -232,6 +230,52 @@ public partial class App : Application
         _credentials.Closed += (_, _) => _credentials = null;
         _credentials.Show();
         _credentials.Activate();
+    }
+
+    /// <summary>
+    /// Opens one pair's detail window - what the design means by a row click opening "that pair's
+    /// detail/settings". Every action on it hands off to a surface that already exists rather than
+    /// growing a second copy here.
+    /// </summary>
+    private void ShowPairDetail(string pairId)
+    {
+        if (_detail is not null)
+        {
+            if (_detail.WindowState == WindowState.Minimized) _detail.WindowState = WindowState.Normal;
+            _detail.Activate();
+            return;
+        }
+
+        _ = ShowPairDetailAsync(pairId);
+    }
+
+    private async Task ShowPairDetailAsync(string pairId)
+    {
+        // The row carries status, not the pair's settings, so fetch the real thing.
+        var state = await _connection!.TryAsync(client => client.GetStateAsync());
+        var pair = state?.Pairs.FirstOrDefault(candidate => candidate.Id == pairId);
+
+        if (pair is null)
+        {
+            ReportUnbuilt("That folder pair no longer exists.");
+            return;
+        }
+
+        _flyout?.HideFlyout();
+
+        var viewModel = new PairDetailViewModel(_connection!, _shell!, pair);
+        viewModel.EditRequested += editing => ShowWizard(editing, onSaved: () => _ = viewModel.ReloadAsync());
+        viewModel.ActivityRequested += ShowActivity;
+        viewModel.RemoveRequested += id =>
+        {
+            var row = _shell!.Pairs.FirstOrDefault(candidate => candidate.Id == id);
+            if (row is not null) ShowRemovePair(row);
+        };
+
+        _detail = new PairDetailWindow(viewModel);
+        _detail.Closed += (_, _) => _detail = null;
+        _detail.Show();
+        _detail.Activate();
     }
 
     /// <summary>
@@ -355,7 +399,7 @@ public partial class App : Application
     /// Opens the add/edit wizard. <paramref name="editing"/> is null for a new pair; #9 will pass
     /// an existing one.
     /// </summary>
-    private void ShowWizard(Contracts.FolderPair? editing = null)
+    private void ShowWizard(Contracts.FolderPair? editing = null, Action? onSaved = null)
     {
         if (_wizard is not null)
         {
@@ -373,8 +417,10 @@ public partial class App : Application
         _wizard.Completed += saved =>
         {
             _wizard = null;
-            if (saved is not null && editing is null)
-                _toasts?.Show(ToastCopy.PairCreated(saved.LocalPath, saved.SharePath));
+            if (saved is null) return;
+
+            if (editing is null) _toasts?.Show(ToastCopy.PairCreated(saved.LocalPath, saved.SharePath));
+            else onSaved?.Invoke();
         };
         _wizard.Closed += (_, _) =>
         {
