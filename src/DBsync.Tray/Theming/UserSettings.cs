@@ -46,6 +46,13 @@ public sealed class UserSettings
     /// </summary>
     public List<string> RecentLocalFolders { get; set; } = new();
 
+    /// <summary>
+    /// Activity table column widths - time, event, folder pair, result - in that order. Empty
+    /// until the columns are dragged. Per-user like appearance: how wide someone wants a column is
+    /// their business and not the machine's.
+    /// </summary>
+    public List<double> ActivityColumnWidths { get; set; } = new();
+
     /// <summary>Most-recent-first, de-duplicated case-insensitively, capped at the design's three.</summary>
     public void RememberLocalFolder(string path)
     {

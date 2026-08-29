@@ -1,4 +1,4 @@
-using DBsync.Contracts;
+﻿using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
 using Microsoft.Data.Sqlite;
 
@@ -67,9 +67,14 @@ public sealed class ActivityLog
         command.CommandText =
             "SELECT id, ts, kind, file, pair_id, pair_name, result, message, bytes FROM activity " +
             "WHERE ts >= $since AND ($pair IS NULL OR pair_id = $pair) " +
+            "AND ($kind IS NULL OR kind = $kind) " +
+            "AND ($search IS NULL OR instr(lower(file), $search) > 0 " +
+            "OR instr(lower(pair_name), $search) > 0) " +
             "ORDER BY ts DESC, id DESC LIMIT $limit OFFSET $offset;";
         command.Parameters.AddWithValue("$since", since.ToUnixTimeMilliseconds());
         command.Parameters.AddWithValue("$pair", (object?)NullIfEmpty(query.PairId) ?? DBNull.Value);
+        command.Parameters.AddWithValue("$kind", (object?)(int?)query.Kind ?? DBNull.Value);
+        command.Parameters.AddWithValue("$search", (object?)SearchTerm(query.Search) ?? DBNull.Value);
         command.Parameters.AddWithValue("$limit", limit);
         command.Parameters.AddWithValue("$offset", Math.Max(0, query.Offset));
 
@@ -104,9 +109,12 @@ public sealed class ActivityLog
         command.CommandText =
             "SELECT kind, COUNT(*) FROM activity " +
             "WHERE ts >= $since AND ($pair IS NULL OR pair_id = $pair) AND result IN ($ok, $pending) " +
+            "AND ($search IS NULL OR instr(lower(file), $search) > 0 " +
+            "OR instr(lower(pair_name), $search) > 0) " +
             "GROUP BY kind;";
         command.Parameters.AddWithValue("$since", since.ToUnixTimeMilliseconds());
         command.Parameters.AddWithValue("$pair", (object?)NullIfEmpty(query.PairId) ?? DBNull.Value);
+        command.Parameters.AddWithValue("$search", (object?)SearchTerm(query.Search) ?? DBNull.Value);
         command.Parameters.AddWithValue("$ok", (int)ActivityResult.Ok);
         command.Parameters.AddWithValue("$pending", (int)ActivityResult.Pending);
 
@@ -140,4 +148,18 @@ public sealed class ActivityLog
     }
 
     private static string? NullIfEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    /// <summary>
+    /// Prepares a search term for the instr() comparisons above.
+    /// <para>
+    /// instr() is a plain substring test, which is what a search box means. LIKE would have
+    /// treated % and _ in a file name as wildcards, needing an escape character threaded through
+    /// every clause to stop it.
+    /// </para>
+    /// </summary>
+    private static string? SearchTerm(string? search)
+    {
+        var term = NullIfEmpty(search);
+        return term?.Trim().ToLowerInvariant();
+    }
 }

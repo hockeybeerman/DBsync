@@ -1,5 +1,7 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
+using System.Windows.Interop;
+using System.Runtime.InteropServices;
 using System.Windows.Controls;
 using System.Windows.Input;
 using DBsync.Tray.ViewModels;
@@ -45,6 +47,59 @@ public partial class ActivityWindow : Window
     private void OnMinimise(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     private void OnClose(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>
+    /// Starts a native resize from one of the card's edge strips. Handing the drag to Windows is
+    /// what keeps snapping, the minimum size and per-monitor DPI working; doing the arithmetic
+    /// here would reimplement all three, badly.
+    /// </summary>
+    private void OnResizeGrip(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement grip || grip.Tag is not string edge) return;
+
+        var hit = edge switch
+        {
+            "Left" => HtLeft,
+            "Right" => HtRight,
+            "Top" => HtTop,
+            "TopLeft" => HtTopLeft,
+            "TopRight" => HtTopRight,
+            "Bottom" => HtBottom,
+            "BottomLeft" => HtBottomLeft,
+            "BottomRight" => HtBottomRight,
+            _ => 0,
+        };
+
+        if (hit == 0) return;
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero) return;
+
+        // The mouse has to be let go before the system takes over, or its modal resize loop never
+        // sees the moves.
+        ReleaseCapture();
+        SendMessage(handle, WmNcLButtonDown, (IntPtr)hit, IntPtr.Zero);
+        e.Handled = true;
+    }
+
+    private const int WmNcLButtonDown = 0x00A1;
+    private const int HtLeft = 10;
+    private const int HtRight = 11;
+    private const int HtTop = 12;
+    private const int HtTopLeft = 13;
+    private const int HtTopRight = 14;
+    private const int HtBottom = 15;
+    private const int HtBottomLeft = 16;
+    private const int HtBottomRight = 17;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    private void OnClearSearch(object sender, RoutedEventArgs e) => _activity.ClearSearch();
 
     private void OnRange24(object sender, RoutedEventArgs e) => _activity.SetRange(24);
 

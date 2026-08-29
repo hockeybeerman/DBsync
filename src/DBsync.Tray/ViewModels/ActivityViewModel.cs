@@ -1,5 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Threading;
 using DBsync.Contracts;
 using DBsync.Contracts.Ipc;
 using DBsync.Tray.Services;
@@ -36,6 +37,8 @@ public sealed class ActivityViewModel : ObservableObject
     private FilterOption _pairFilter = new("All folder pairs", null);
     private FilterOption _kindFilter = new("All events", null);
     private int _hours = 24;
+    private string _search = "";
+    private CancellationTokenSource? _searchDebounce;
 
     public ActivityViewModel(ServiceConnection connection)
     {
@@ -51,6 +54,9 @@ public sealed class ActivityViewModel : ObservableObject
     public event Action? ReviewConflictsRequested;
 
     public ObservableCollection<ActivityRowViewModel> Rows { get; } = new();
+
+    /// <summary>Column widths, shared with every row so a header drag moves the whole table.</summary>
+    public ActivityColumns Columns { get; } = new();
 
     /// <summary>"Last 24 hours across 4 folder pairs" — recomputed from the live filter.</summary>
     public string Subline
@@ -124,6 +130,56 @@ public sealed class ActivityViewModel : ObservableObject
         {
             if (value is null || !Set(ref _kindFilter, value)) return;
             _ = ReloadAsync();
+        }
+    }
+
+    /// <summary>
+    /// Free-text search over the file path and the folder pair's name.
+    /// <para>
+    /// Typing re-queries rather than filtering what is on screen, because the rows are paged: a
+    /// filter applied here would search only what has been fetched so far and report nothing
+    /// found for a file that is simply further down the history.
+    /// </para>
+    /// </summary>
+    public string Search
+    {
+        get => _search;
+        set
+        {
+            if (!Set(ref _search, value)) return;
+            Raise(nameof(HasSearch));
+            DebounceReload();
+        }
+    }
+
+    public bool HasSearch => Search.Length > 0;
+
+    public void ClearSearch() => Search = "";
+
+    /// <summary>
+    /// Waits for a pause in typing before querying. Without it every keystroke costs a round trip
+    /// and the results flicker through partial words on the way to the one being typed.
+    /// </summary>
+    private async void DebounceReload()
+    {
+        _searchDebounce?.Cancel();
+        _searchDebounce?.Dispose();
+        _searchDebounce = new CancellationTokenSource();
+
+        var token = _searchDebounce.Token;
+        try
+        {
+            // Started from the UI thread and deliberately not wrapped in Task.Run: the
+            // continuation has to come back to the UI thread, because ReloadAsync rebuilds Rows
+            // and a bound ObservableCollection cannot be touched from the thread pool. Doing that
+            // throws into a task nobody awaits, where the failure is swallowed and the search
+            // silently does nothing.
+            await Task.Delay(TimeSpan.FromMilliseconds(250), token).ConfigureAwait(true);
+            await ReloadAsync().ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a later keystroke.
         }
     }
 
@@ -219,6 +275,8 @@ public sealed class ActivityViewModel : ObservableObject
             {
                 PairId = PairFilter.Value,
                 Since = TimeSpan.FromHours(Hours),
+                Kind = SelectedKind,
+                Search = Search,
                 Limit = PageSize,
                 Offset = Rows.Count,
             })).ConfigureAwait(true);
@@ -230,12 +288,11 @@ public sealed class ActivityViewModel : ObservableObject
                 return;
             }
 
-            // The service has no event-kind filter, so that one is applied here. It means a page
-            // can come back mostly empty when a narrow kind is selected — hence keeping _hasMore
-            // tied to the unfiltered page size rather than how many rows survived.
-            var kept = response.Entries.Where(MatchesKind).Select(entry => new ActivityRowViewModel(entry));
-            foreach (var row in kept) Rows.Add(row);
+            foreach (var entry in response.Entries) Rows.Add(new ActivityRowViewModel(entry, Columns));
 
+            // Every filter is applied in SQL now, so a full page really does mean there is more.
+            // While the kind filter was applied here, a page could arrive almost empty and this
+            // count still had to be taken before filtering to stay honest.
             _hasMore = response.Entries.Count == PageSize;
             IsEmpty = Rows.Count == 0;
         }
@@ -251,6 +308,7 @@ public sealed class ActivityViewModel : ObservableObject
         {
             PairId = PairFilter.Value,
             Since = TimeSpan.FromHours(Hours),
+            Search = Search,
         };
 
         var summary = await _connection.TryAsync(client => client.GetActivitySummaryAsync(query))
@@ -278,8 +336,23 @@ public sealed class ActivityViewModel : ObservableObject
 
     private static string Count(int value) => value.ToString("N0", CultureInfo.InvariantCulture);
 
+    /// <summary>The kind filter as the service wants it, or null for every kind.</summary>
+    private ActivityEventKind? SelectedKind =>
+        KindFilter.Value is not null && Enum.TryParse<ActivityEventKind>(KindFilter.Value, out var kind)
+            ? kind
+            : null;
+
     private bool MatchesKind(ActivityEntry entry) =>
-        KindFilter.Value is null || entry.Kind.ToString() == KindFilter.Value;
+        SelectedKind is not { } kind || entry.Kind == kind;
+
+    /// <summary>
+    /// Whether a live row belongs in the current view. Mirrors the SQL rather than sharing it -
+    /// a row arriving on the wire has never been near the database.
+    /// </summary>
+    private bool MatchesSearch(ActivityEntry entry) =>
+        !HasSearch
+        || entry.File.Contains(Search, StringComparison.OrdinalIgnoreCase)
+        || entry.PairName.Contains(Search, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// A row arriving while the window is open goes straight to the top rather than triggering a
@@ -289,13 +362,21 @@ public sealed class ActivityViewModel : ObservableObject
     {
         if (PairFilter.Value is not null && entry.PairId != PairFilter.Value) return;
         if (!MatchesKind(entry)) return;
+        if (!MatchesSearch(entry)) return;
 
-        Rows.Insert(0, new ActivityRowViewModel(entry));
+        Rows.Insert(0, new ActivityRowViewModel(entry, Columns));
         IsEmpty = false;
 
         // Counters have moved; refresh them rather than trying to increment the right one.
         _ = LoadSummaryAsync();
     }
 
-    public void Detach() => _connection.LogAppended -= OnLogAppended;
+    public void Detach()
+    {
+        Columns.Save();
+        _connection.LogAppended -= OnLogAppended;
+        _searchDebounce?.Cancel();
+        _searchDebounce?.Dispose();
+        _searchDebounce = null;
+    }
 }

@@ -1,3 +1,4 @@
+﻿using System.Globalization;
 using DBsync.Contracts;
 using DBsync.Tray.Icons;
 
@@ -9,14 +10,27 @@ namespace DBsync.Tray.ViewModels;
 /// </summary>
 public sealed class ActivityRowViewModel
 {
-    public ActivityRowViewModel(ActivityEntry entry) => Entry = entry;
+    public ActivityRowViewModel(ActivityEntry entry, ActivityColumns columns)
+    {
+        Entry = entry;
+        Columns = columns;
+    }
+
+    /// <summary>The table's shared column widths, bound by this row's ColumnDefinitions.</summary>
+    public ActivityColumns Columns { get; }
 
     public ActivityEntry Entry { get; }
 
     public long Id => Entry.Id;
 
     /// <summary>Local time, tabular figures. The log stores UTC.</summary>
-    public string Time => Entry.TimestampUtc.ToLocalTime().ToString("HH:mm");
+    /// <summary>
+    /// Date and time, in the local zone. The date is shown on every row rather than only when the
+    /// range spans more than a day, so the column does not change shape when the range changes -
+    /// and it can be narrowed by dragging if it is not wanted.
+    /// </summary>
+    public string Time => Entry.TimestampUtc.ToLocalTime()
+        .ToString("MM/dd/yy hh:mm tt", CultureInfo.InvariantCulture);
 
     public string Event => Entry.Kind switch
     {

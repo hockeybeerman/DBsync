@@ -1,4 +1,4 @@
-namespace DBsync.Contracts.Ipc;
+﻿namespace DBsync.Contracts.Ipc;
 
 // Request payloads ------------------------------------------------------------
 
@@ -34,6 +34,25 @@ public sealed class ActivityQuery
 
     /// <summary>Skip this many rows — lets the activity window page without holding a cursor.</summary>
     public int Offset { get; set; }
+
+    /// <summary>
+    /// Only this kind of event. Null means every kind.
+    /// <para>
+    /// Filtered in SQL rather than by the caller: the rows are paged, so dropping unwanted ones
+    /// after the fact returns short pages and makes "is there more?" unanswerable.
+    /// </para>
+    /// </summary>
+    public ActivityEventKind? Kind { get; set; }
+
+    /// <summary>
+    /// Case-insensitive substring matched against the file path and the folder pair's name. Null
+    /// or blank means no search.
+    /// <para>
+    /// Also in SQL, and for a stronger reason than Kind: searching only the rows already fetched
+    /// would report "no matches" for a file that is simply further down the history.
+    /// </para>
+    /// </summary>
+    public string? Search { get; set; }
 }
 
 public sealed class ConflictQuery

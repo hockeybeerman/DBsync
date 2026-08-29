@@ -1,4 +1,4 @@
-<Window x:Class="DBsync.Tray.Views.ActivityWindow"
+﻿<Window x:Class="DBsync.Tray.Views.ActivityWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icons="clr-namespace:DBsync.Tray.Icons"
@@ -111,6 +111,25 @@
             <ComboBox Style="{StaticResource FilterComboBoxStyle}" MinWidth="130" Margin="0,0,5.6,0"
                       ItemsSource="{Binding KindOptions}" SelectedItem="{Binding KindFilter}"
                       DisplayMemberPath="Label" />
+            <!--
+              Search runs against the service, not the rows on screen - see ActivityViewModel.
+              Placed with the other filters because that is what it is.
+            -->
+            <Grid Width="200" Margin="0,0,5.6,0">
+              <TextBox Style="{StaticResource InputStyle}" VerticalContentAlignment="Center"
+                       Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=0}" />
+              <TextBlock Text="Search files and pairs" IsHitTestVisible="False"
+                         Margin="9,0,0,0" VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextMuted55Brush}" FontSize="13"
+                         Visibility="{Binding HasSearch, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+              <Button Style="{StaticResource IconButtonStyle}" HorizontalAlignment="Right"
+                      Margin="0,0,3,0" Width="22" Height="22" Padding="0" ToolTip="Clear search"
+                      Click="OnClearSearch"
+                      Visibility="{Binding HasSearch, Converter={StaticResource BoolToVisibility}}">
+                <icons:Icon Key="X" Size="11" />
+              </Button>
+            </Grid>
+
             <Border Style="{StaticResource SegmentContainerStyle}">
               <StackPanel Orientation="Horizontal">
                 <RadioButton GroupName="Range" Style="{StaticResource LabelledSegmentStyle}"
@@ -132,19 +151,29 @@
           <Grid Grid.Row="2">
             <DockPanel>
               <Control DockPanel.Dock="Bottom" Template="{StaticResource FadingRowRuleTemplate}" />
+              <!--
+                Widths bind two-way to the shared ActivityColumns. A GridSplitter sets the
+                ColumnDefinition's width directly, which travels back through the binding and
+                moves every row with it. FILE stays star-sized so it absorbs the slack.
+              -->
               <Grid Margin="0,0,0,5.6">
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="{DynamicResource ActivityTimeWidth}" />
-                  <ColumnDefinition Width="{DynamicResource ActivityEventWidth}" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="{DynamicResource ActivityPairWidth}" />
-                  <ColumnDefinition Width="{DynamicResource ActivityResultWidth}" />
+                  <ColumnDefinition Width="{Binding Columns.TimeWidth, Mode=TwoWay}" MinWidth="60" />
+                  <ColumnDefinition Width="{Binding Columns.EventWidth, Mode=TwoWay}" MinWidth="60" />
+                  <ColumnDefinition Width="*" MinWidth="80" />
+                  <ColumnDefinition Width="{Binding Columns.PairWidth, Mode=TwoWay}" MinWidth="60" />
+                  <ColumnDefinition Width="{Binding Columns.ResultWidth, Mode=TwoWay}" MinWidth="60" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="TIME" Style="{StaticResource TableHeaderTextStyle}" />
                 <TextBlock Grid.Column="1" Text="EVENT" Style="{StaticResource TableHeaderTextStyle}" />
                 <TextBlock Grid.Column="2" Text="FILE" Style="{StaticResource TableHeaderTextStyle}" />
                 <TextBlock Grid.Column="3" Text="FOLDER PAIR" Style="{StaticResource TableHeaderTextStyle}" />
                 <TextBlock Grid.Column="4" Text="RESULT" Style="{StaticResource TableHeaderTextStyle}" />
+
+                <GridSplitter Grid.Column="0" Style="{StaticResource ColumnSplitterStyle}" />
+                <GridSplitter Grid.Column="1" Style="{StaticResource ColumnSplitterStyle}" />
+                <GridSplitter Grid.Column="2" Style="{StaticResource ColumnSplitterStyle}" />
+                <GridSplitter Grid.Column="3" Style="{StaticResource ColumnSplitterStyle}" />
               </Grid>
             </DockPanel>
           </Grid>
@@ -157,11 +186,11 @@
                 <DataTemplate>
                   <Grid ToolTip="{Binding Tooltip}">
                     <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="{DynamicResource ActivityTimeWidth}" />
-                      <ColumnDefinition Width="{DynamicResource ActivityEventWidth}" />
+                      <ColumnDefinition Width="{Binding Columns.TimeWidth}" />
+                      <ColumnDefinition Width="{Binding Columns.EventWidth}" />
                       <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="{DynamicResource ActivityPairWidth}" />
-                      <ColumnDefinition Width="{DynamicResource ActivityResultWidth}" />
+                      <ColumnDefinition Width="{Binding Columns.PairWidth}" />
+                      <ColumnDefinition Width="{Binding Columns.ResultWidth}" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="{Binding Time}"
@@ -196,5 +225,32 @@
         </Grid>
       </DockPanel>
     </Border>
+
+    <!--
+      Resize grips. WindowStyle=None with AllowsTransparency leaves no non-client area, so Windows
+      has no border to start a resize from and ResizeMode=CanResize on its own does nothing - the
+      window simply would not resize. These strips sit on the card's edge and hand the drag back
+      with WM_NCLBUTTONDOWN, so the actual resize is the system's: snapping, MinWidth/MinHeight and
+      multi-monitor DPI all behave as they would on any other window.
+    -->
+    <Grid>
+      <Rectangle Height="6" VerticalAlignment="Top" Margin="6,0" Fill="Transparent"
+                 Cursor="SizeNS" Tag="Top" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Height="6" VerticalAlignment="Bottom" Margin="6,0" Fill="Transparent"
+                 Cursor="SizeNS" Tag="Bottom" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Width="6" HorizontalAlignment="Left" Margin="0,6" Fill="Transparent"
+                 Cursor="SizeWE" Tag="Left" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Width="6" HorizontalAlignment="Right" Margin="0,6" Fill="Transparent"
+                 Cursor="SizeWE" Tag="Right" MouseLeftButtonDown="OnResizeGrip" />
+
+      <Rectangle Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top"
+                 Fill="Transparent" Cursor="SizeNWSE" Tag="TopLeft" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Top"
+                 Fill="Transparent" Cursor="SizeNESW" Tag="TopRight" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                 Fill="Transparent" Cursor="SizeNESW" Tag="BottomLeft" MouseLeftButtonDown="OnResizeGrip" />
+      <Rectangle Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                 Fill="Transparent" Cursor="SizeNWSE" Tag="BottomRight" MouseLeftButtonDown="OnResizeGrip" />
+    </Grid>
   </Grid>
 </Window>

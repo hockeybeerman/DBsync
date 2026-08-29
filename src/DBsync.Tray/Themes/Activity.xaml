@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Activity table, plus the dropdown the filters need.
 
   The Nocturne rule signature applies to table rows: each row's underline fades to transparent 48px
@@ -15,7 +15,23 @@
     GridLength, not Double: ColumnDefinition.Width is a GridLength, and a DynamicResource does not
     run a type converter on the way in — a Double here throws an InvalidCastException at load.
   -->
-  <GridLength x:Key="ActivityTimeWidth">74</GridLength>
+  <!--
+    Splitter sitting on a column's trailing edge. Transparent and 6px wide so it is grabbable
+    without drawing a line the design never asked for; the cursor is the only affordance.
+  -->
+  <Style x:Key="ColumnSplitterStyle" TargetType="GridSplitter">
+    <Setter Property="Width" Value="6" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="ResizeBehavior" Value="CurrentAndNext" />
+    <Setter Property="ResizeDirection" Value="Columns" />
+    <Setter Property="Margin" Value="0,-4,0,-4" />
+    <Setter Property="Cursor" Value="SizeWE" />
+    <Setter Property="Focusable" Value="False" />
+  </Style>
+
+  <GridLength x:Key="ActivityTimeWidth">132</GridLength>
   <GridLength x:Key="ActivityEventWidth">110</GridLength>
   <GridLength x:Key="ActivityPairWidth">150</GridLength>
   <GridLength x:Key="ActivityResultWidth">96</GridLength>
